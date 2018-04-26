@@ -5,29 +5,55 @@ using UnityEngine;
 public class Hex {
 
     // Constructor sets the row and column 
-    public Hex(int r, int c)
+    public Hex(int q, int r)
     {
-        Row = r;
-        Column = c;
+        R = r;
+        Q = q;
+        S = -(Q + R);
     }
 
-    public readonly int Row;
-    public readonly int Column;
+    public readonly int R;
+    public readonly int Q;
+    public readonly int S;
 
     int HexRadius = 1;
     int HexWidth = 2;
     float HexHeight = Mathf.Sqrt(3);
 
+    // Variables that describe the land
+    float elevation;
+
     public Vector3 Position()
     {
-        float xPos = Column * HexWidth * 0.75f;
-        float zPos = Row * HexHeight;
+        // x posiiton is column times 3/4 width
+        float xPos = Q * HexWidth * 0.75f;
 
-        if (Column % 2 == 1)
-            zPos += HexHeight / 2;
-
+        // z position is hex height times sum of row plus 1/2 column
+        float zPos = (R + Q/2f) * HexHeight;
+       
         return new Vector3(xPos, 0, zPos);
     }
 
+    // Simple code to calculate the distance in tiles between two hexes
+    public static int Distance (Hex a, Hex b)
+    {
+        return 
+            Mathf.Max(
+                Mathf.Abs(a.Q - b.Q), 
+                Mathf.Abs(a.R - b.R), 
+                Mathf.Abs(a.S - b.S)
+            );
+    }
+
 	
+    public void AddElevation(float f)
+    {
+        elevation += f;
+    }
+
+    public float GetElevation()
+    {
+        return elevation;
+    }
+
 }

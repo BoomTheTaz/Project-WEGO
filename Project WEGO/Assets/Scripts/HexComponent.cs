@@ -9,5 +9,8 @@ public class HexComponent : MonoBehaviour {
     public void SetHex(Hex h)
     {
         hex = h;
+
+        TextMesh tm = GetComponentInChildren<TextMesh>();
+        tm.text = string.Format("{0},{1}", hex.Q, hex.R);
     }
 }

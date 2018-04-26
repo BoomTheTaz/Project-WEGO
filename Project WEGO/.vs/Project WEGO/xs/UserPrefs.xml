@@ -1,5 +1,5 @@
 ﻿<Properties StartupConfiguration="{42F83539-DD86-A017-DF70-4193BFE4CD8D}|">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/HexMap.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/HexComponent.cs">
     <Files>
       <File FileName="Assets/Scripts/HexMap.cs" Line="23" Column="23" />
       <File FileName="Assets/Scripts/Hex.cs" Line="4" Column="1" />
