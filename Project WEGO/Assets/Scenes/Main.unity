@@ -141,8 +141,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   HexPrefab: {fileID: 1545678522491950, guid: 3b7a2630a2f5e4af8b663f5dae99c095, type: 2}
-  MapTileWidth: 10
-  MapTileHeight: 20
+  FlatMat: {fileID: 2100000, guid: 2be5d5371df96484ea2aacf94e1f0b46, type: 2}
+  HillMat: {fileID: 2100000, guid: a9bd846ee08f24863b2665c5b5015c47, type: 2}
+  BoulderMat: {fileID: 2100000, guid: ebff2b9bba2474f8cbf37805454a95dc, type: 2}
+  PondMat: {fileID: 2100000, guid: 1982bf4893ced4396a2c7df814209cea, type: 2}
+  ForestFlatMat: {fileID: 2100000, guid: 4858125d407014da792799fa5e535563, type: 2}
+  ForestHillMat: {fileID: 2100000, guid: d8989e3a5003f4928947770597136cc9, type: 2}
+  WetlandMat: {fileID: 2100000, guid: aad740c51781a41c5bb3dc69bcd9f0df, type: 2}
 --- !u!4 &36114822
 Transform:
   m_ObjectHideFlags: 0
@@ -277,7 +282,7 @@ Light:
   serializedVersion: 8
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 1
+  m_Intensity: 0.6
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10

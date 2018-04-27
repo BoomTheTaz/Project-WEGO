@@ -21,7 +21,8 @@ public class Hex {
     float HexHeight = Mathf.Sqrt(3);
 
     // Variables that describe the land
-    float elevation;
+    float Elevation;
+    float Moisture;
 
     public Vector3 Position()
     {
@@ -48,12 +49,21 @@ public class Hex {
 	
     public void AddElevation(float f)
     {
-        elevation += f;
+        Elevation += f;
     }
 
     public float GetElevation()
     {
-        return elevation;
+        return Elevation;
     }
 
+    public void AddMoisture(float f)
+    {
+        Moisture += f;
+    }
+
+    public float GetMoisture()
+    {
+        return Moisture;
+    }
 }

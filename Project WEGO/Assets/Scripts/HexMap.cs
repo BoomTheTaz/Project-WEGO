@@ -6,17 +6,22 @@ public class HexMap : MonoBehaviour {
 
 
     public GameObject HexPrefab;
-    int MapTileWidth = 12;
-    int MapTileHeight = 20;
+    int MapTileWidth;
+    int MapTileHeight;
 
     float xPos;
     float zPos;
-    float MapActualHeight=0;
-    float MapActualWidth=0;
+    float MapActualHeight;
+    float MapActualWidth;
     GameObject HexGO;
 
-    public Material Flat;
-    public Material Hill;
+    public Material FlatMat;
+    public Material HillMat;
+    public Material BoulderMat;
+    public Material PondMat;
+    public Material ForestFlatMat;
+    public Material ForestHillMat;
+    public Material WetlandMat;
 
     // Store all hex Data in a dictionary
     readonly Dictionary<int, Hex> Hexes = new Dictionary<int, Hex>();
@@ -24,6 +29,8 @@ public class HexMap : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        MapTileWidth = 12;
+        MapTileHeight = 20;
         GenerateMap();
 	}
 
@@ -97,22 +104,107 @@ public class HexMap : MonoBehaviour {
             if (MapActualHeight <= 0 && row == MapTileHeight - 1)
                 MapActualHeight = HexGO.transform.position.z;
         }
-        AddTopography();
+        AddTopography(7,7);
         UpdateVisuals();
     }
 
     // Test function to add features to the map
-    void AddTopography()
+    // Types of terrain:
+    // - Flatlands
+    // - Hills
+    // - Forests
+    // - Boulders (i.e. impassable objects)
+    // - Wetlands
+    // - TallGrass(?)
+    // - Pond
+
+
+
+    /// <summary>
+    /// Adds features to the map
+    /// </summary>
+    /// <param name="d">Difficulty of terrain elevation.</param>
+    /// <param name="w">Water level difficulty.</param>
+    void AddTopography(int d, int w)
     {
-        int rad = 4;
-        Hex mid = GetHexAt(5, 10);
 
-        Hex[] toChange = GetHexesWithinRange(mid, rad);
-
-        foreach (Hex h in toChange)
+        // Alter elevation
+        for (int i = 0; i < d; i++)
         {
-            h.AddElevation(Mathf.Lerp(1, 0, (float)Hex.Distance(mid, h) / rad + Random.Range(0f,0.2f)));
+            Hex mid = null;
+            int rad = Random.Range(0, 3);
+            while (mid == null)
+            {
+                int randQ = Random.Range(0, MapTileWidth);
+                int randR = Random.Range(-MapTileWidth / 2, MapTileHeight);
+
+                if (Hexes.ContainsKey(QRtoKey(randQ,randR)))
+                {
+                    mid = GetHexAt(randQ, randR);
+                }
+
+            }
+
+            // If there is a single tile, just make a boulder and move on
+            if (rad == 0)
+            {
+                mid.AddElevation(10);
+                mid.AddMoisture(-10);
+                mid = null;
+                continue;
+            }
+
+            Hex[] toElevate = GetHexesWithinRange(mid, rad);
+
+            foreach (Hex h in toElevate)
+            {
+                h.AddElevation(Mathf.Lerp(.5f, .3f, Hex.Distance(h, mid) / rad)+Mathf.PerlinNoise(Random.Range(0f,1f),Random.Range(0f, 1f))*.4f);
+            }
+
+            mid = null;
+
         }
+
+
+        // Alter water levels
+        for (int l = 0; l < w; l++)
+        {
+            Hex mid = null;
+            int rad = Random.Range(0, 3) * 2;
+            while(mid == null)
+            {
+                int randQ = Random.Range(0, MapTileWidth);
+                int randR = Random.Range(-MapTileWidth / 2, MapTileHeight);
+
+                if (Hexes.ContainsKey(QRtoKey(randQ, randR)))
+                {
+                    mid = GetHexAt(randQ, randR);
+                    break;
+                }
+
+            }
+
+            // Pond Condition
+            if (rad == 0)
+            {
+                mid.AddMoisture(10);
+                mid.AddElevation(-10);
+                continue;
+            }
+
+            Hex[] toHydrate = GetHexesWithinRange(mid, rad);
+
+            foreach (Hex h in toHydrate)
+            {
+                h.AddMoisture(Mathf.Lerp(.3f, .1f, (float)Hex.Distance(h, mid) / rad) + Mathf.PerlinNoise(Random.Range(0f, 1f), Random.Range(0f, 1f)) * .1f);
+            }
+
+            mid = null;
+
+        }
+
+
+
     }
 
     // Function to update the visuals of the map
@@ -124,15 +216,44 @@ public class HexMap : MonoBehaviour {
 
             MeshRenderer mr = hexGO.GetComponentInChildren<MeshRenderer>();
 
-            Material mat = new Material(Flat);
+            Debug.Log(h.GetMoisture());
 
-            mat.color = Color.Lerp(Color.green, Color.red, h.GetElevation());
+            // ======= Material Conditions ======
+            // TODO Tweak these numbers
 
-            mr.material = mat;
-            //if (h.GetElevation() > 0)
-            //    mr.material = Hill;
-            //else
-                //mr.material = Flat;
+            // Boulder
+            if (h.GetElevation() > 1)
+                mr.material = BoulderMat;
+
+            // Pond
+            else if (h.GetMoisture() > 1)
+                mr.material = PondMat;
+
+            // Hill
+            else if (h.GetElevation() > 0.6)
+            {
+                // Forested Hill
+                if (h.GetMoisture() > 0.7)
+                    mr.material = ForestHillMat;
+
+                // Plain Hill
+                else
+                    mr.material = HillMat;
+            }
+
+            // Wetland
+            else if (h.GetMoisture() > 0.8)
+                mr.material = WetlandMat;
+
+            // Flat Forest
+            else if (h.GetMoisture() > 0.3)
+                mr.material = ForestFlatMat;
+
+            // Flatland
+            else
+                mr.material = FlatMat;
+
+
                 
         }
     }
@@ -185,7 +306,8 @@ public class HexMap : MonoBehaviour {
         {
             for (int dy = Mathf.Max(-radius, -dx-radius); dy < Mathf.Min(radius-dx,radius)+1; dy++)
             {
-                hexesInRange.Add(Hexes[QRtoKey( center.Q + dx, center.R + dy)]);
+                if (Hexes.ContainsKey(QRtoKey(center.Q + dx, center.R + dy)))
+                    hexesInRange.Add(Hexes[QRtoKey( center.Q + dx, center.R + dy)]);
             }
         }
 
