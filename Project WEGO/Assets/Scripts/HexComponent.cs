@@ -13,6 +13,8 @@ public class HexComponent : MonoBehaviour {
     int MaxTokens = 6;
     int[] positionAngles = new int[6] {120,180,60,240,0,300 };
 
+    GameObject[] Tokens = new GameObject[6];
+
 
 	public void SetHex(Hex h)
     {
@@ -58,6 +60,26 @@ public class HexComponent : MonoBehaviour {
 
         }
         return true;
+    }
+
+    // Function called when clicked on during gameplay, prepares tokens, etc.
+    public GameObject[] Selected()
+    {
+        for (int c = 0; c < TokenPlacement.childCount; c++)
+        {
+
+            Tokens[c] = TokenPlacement.GetChild(c).gameObject;
+        }
+
+        return Tokens;
+    }
+
+    public void Deselected()
+    {
+        for (int i = 0; i < Tokens.Length; i++)
+        {
+            Tokens[i] = null;
+        }
     }
 
 }

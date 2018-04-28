@@ -7,17 +7,23 @@ public class ArmyManager : MonoBehaviour {
     public GameObject TokenPrefab;
     public Sprite[] Sprites;
 
-    HexMap hexMap;
+    public Color MainColor;
+    public Color AccentColor;
+
+    WarManager warManager;
     GameObject[] Army;
 
     int armySize=10;
     int AvailableUnits;
 
+    bool firstToken = true;
+
 	// Use this for initialization
 	void Start () {
-        hexMap = FindObjectOfType<HexMap>();
 
         Army = new GameObject[armySize];
+
+        warManager = FindObjectOfType<WarManager>();
 
         CreateArmy();
 	}
@@ -36,7 +42,14 @@ public class ArmyManager : MonoBehaviour {
             t.GetComponent<Transform>().position += Vector3.down;
 
             // Setup Token with Desired colors and sprites
-            t.GetComponent<Token>().SetUp(Color.red, Color.gray, Sprites[Random.Range(0,2)]);
+
+            if (firstToken == true)
+            {
+                t.GetComponent<Token>().SetUp(MainColor, AccentColor, Sprites[Random.Range(0, 2)]);
+                firstToken = false;
+            }
+            else
+                t.GetComponent<Token>().SetUp(AccentColor, Sprites[Random.Range(0,2)]);
 
             // Add token to the army
             Army[AvailableUnits] = t;
@@ -62,14 +75,18 @@ public class ArmyManager : MonoBehaviour {
         }
         else
         {
-            Debug.Log("AHHHH!!! THE ARMY IS EMPTY");
+            Debug.Log("AHHHH!!! THE ARMY IS EMPTY. WE SHOULDN'T BE HERE");
             return null;
         }
+
     }
 
-    public void DidNotUseToken()
+    public void UsedToken(bool b)
     {
-        AvailableUnits++;
+        if (b == false)
+            AvailableUnits++;
+        else if (AvailableUnits == 0)
+            warManager.FinishedSettingUp();
     }
 
 
