@@ -16,7 +16,7 @@ public class Hex {
     public readonly int Q;
     public readonly int S;
 
-    int HexRadius = 1;
+    //int HexRadius = 1;
     int HexWidth = 2;
     float HexHeight = Mathf.Sqrt(3);
 

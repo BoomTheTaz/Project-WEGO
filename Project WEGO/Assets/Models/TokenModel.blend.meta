@@ -8,6 +8,8 @@ ModelImporter:
     100000: //RootNode
     400000: //RootNode
     2100000: unnamed
+    2100002: Accent
+    2100004: Main
     2300000: //RootNode
     3300000: //RootNode
     4300000: ArmyToken
@@ -68,7 +70,7 @@ ModelImporter:
     normalImportMode: 0
     tangentImportMode: 3
     normalCalculationMode: 4
-  importAnimation: 1
+  importAnimation: 0
   copyAvatar: 0
   humanDescription:
     serializedVersion: 2

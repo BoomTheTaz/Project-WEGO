@@ -148,6 +148,13 @@ MonoBehaviour:
   ForestFlatMat: {fileID: 2100000, guid: 4858125d407014da792799fa5e535563, type: 2}
   ForestHillMat: {fileID: 2100000, guid: d8989e3a5003f4928947770597136cc9, type: 2}
   WetlandMat: {fileID: 2100000, guid: aad740c51781a41c5bb3dc69bcd9f0df, type: 2}
+  Flatland: {fileID: 0}
+  Hill0: {fileID: 4300000, guid: 4c13c1f3ac43d4c98bd84395b7654483, type: 3}
+  BoulderMesh: {fileID: 4300002, guid: 8b166608b30714bf389e189d1d6199cf, type: 3}
+  InnerTreePrefab: {fileID: 1719536436161290, guid: 85ddbfa29193b4fe6a7f607b5504ffe7,
+    type: 2}
+  OuterTreePrefab: {fileID: 1896435038653208, guid: 4913a65b151494d8fa5e10322c49ec6f,
+    type: 2}
 --- !u!4 &36114822
 Transform:
   m_ObjectHideFlags: 0
@@ -214,7 +221,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 3
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -236,13 +243,13 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 277650308}
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalRotation: {x: 0.38268343, y: 0, z: 0, w: 0.92387956}
   m_LocalPosition: {x: 0, y: 10, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 45, y: 0, z: 0}
 --- !u!114 &277650313
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -256,6 +263,92 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 0.5
   offset: 3
+  zShift: -10
+--- !u!1 &767358875
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 767358877}
+  - component: {fileID: 767358876}
+  m_Layer: 0
+  m_Name: ArmyManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &767358876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 767358875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c3516ebd16564bc2ab79381d128a263, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TokenPrefab: {fileID: 1236720015400338, guid: 7692319af21cb4e3b854c3f1434bb91e,
+    type: 2}
+  Sprites:
+  - {fileID: 21300000, guid: 5225d53d6f5e54e68959e10794cf89f0, type: 3}
+  - {fileID: 21300000, guid: e2b7c0b22ba2d479084c959058ee9c02, type: 3}
+--- !u!4 &767358877
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 767358875}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &912236842
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 912236843}
+  - component: {fileID: 912236844}
+  m_Layer: 0
+  m_Name: MouseController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &912236843
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 912236842}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 7.548555, y: 0.24321207, z: 11.932738}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &912236844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 912236842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06bc312c8d5a140e29b97270f01342a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1368547133
 GameObject:
   m_ObjectHideFlags: 0

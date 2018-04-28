@@ -15,6 +15,7 @@ public class HexMap : MonoBehaviour {
     float MapActualWidth;
     GameObject HexGO;
 
+    // Test Materials to differentiate terrain
     public Material FlatMat;
     public Material HillMat;
     public Material BoulderMat;
@@ -22,6 +23,16 @@ public class HexMap : MonoBehaviour {
     public Material ForestFlatMat;
     public Material ForestHillMat;
     public Material WetlandMat;
+
+    // Simple meshes to distinguish elevations
+    public Mesh Flatland;
+    public Mesh Hill0;
+    public Mesh BoulderMesh;
+
+
+    // Tree prefabs
+    public GameObject InnerTreePrefab;
+    public GameObject OuterTreePrefab;
 
     // Store all hex Data in a dictionary
     readonly Dictionary<int, Hex> Hexes = new Dictionary<int, Hex>();
@@ -84,7 +95,7 @@ public class HexMap : MonoBehaviour {
                 HexGO = Instantiate(HexPrefab, h.Position(), Quaternion.identity, this.transform);
 
                 // Give the hex prefab a copy of the hex data
-                HexGO.GetComponent<HexComponent>().SetHex(h);
+                HexGO.GetComponentInChildren<HexComponent>().SetHex(h);
 
                 // Store new hex in Hexes Dictionary, using "column" + "row"
                 Hexes.Add(QRtoKey(column,row), h);
@@ -132,7 +143,7 @@ public class HexMap : MonoBehaviour {
         for (int i = 0; i < d; i++)
         {
             Hex mid = null;
-            int rad = Random.Range(0, 3);
+            int rad = Random.Range(0, 5);
             while (mid == null)
             {
                 int randQ = Random.Range(0, MapTileWidth);
@@ -158,7 +169,10 @@ public class HexMap : MonoBehaviour {
 
             foreach (Hex h in toElevate)
             {
-                h.AddElevation(Mathf.Lerp(.5f, .3f, Hex.Distance(h, mid) / rad)+Mathf.PerlinNoise(Random.Range(0f,1f),Random.Range(0f, 1f))*.4f);
+                h.AddElevation(
+                    Mathf.PerlinNoise(Random.Range(0f,1f),Random.Range(0f, 1f))*.3f+ // Randomness
+                    Mathf.Lerp(0.3f,0.1f,Mathf.Max(Mathf.Abs(h.R-mid.R),Mathf.Abs(h.S - mid.S))/rad)); // Lateral Bias
+                
             }
 
             mid = null;
@@ -196,7 +210,10 @@ public class HexMap : MonoBehaviour {
 
             foreach (Hex h in toHydrate)
             {
-                h.AddMoisture(Mathf.Lerp(.3f, .1f, (float)Hex.Distance(h, mid) / rad) + Mathf.PerlinNoise(Random.Range(0f, 1f), Random.Range(0f, 1f)) * .1f);
+                h.AddMoisture(
+                    Mathf.PerlinNoise(Random.Range(0f, 1f), Random.Range(0f, 1f)) * .6f + // Randomness
+                    Mathf.Lerp(0.2f,0.1f,(float)Hex.Distance(mid,h)/rad)       // Center Bias
+                );
             }
 
             mid = null;
@@ -214,27 +231,45 @@ public class HexMap : MonoBehaviour {
         {
             GameObject hexGO = HexToGameObject[h];
 
-            MeshRenderer mr = hexGO.GetComponentInChildren<MeshRenderer>();
+            // Default Token height
+            hexGO.GetComponent<HexComponent>().SetTokenHeight(0.05f);
 
-            Debug.Log(h.GetMoisture());
+            MeshRenderer mr = hexGO.GetComponentInChildren<MeshRenderer>();
+            MeshFilter mf = hexGO.GetComponentInChildren<MeshFilter>();
 
             // ======= Material Conditions ======
             // TODO Tweak these numbers
 
             // Boulder
             if (h.GetElevation() > 1)
+            {
+                mf.mesh = BoulderMesh;
                 mr.material = BoulderMat;
+                hexGO.transform.rotation *= Quaternion.AngleAxis(60 * Random.Range(0, 7), Vector3.up);
+
+            }
 
             // Pond
             else if (h.GetMoisture() > 1)
                 mr.material = PondMat;
 
             // Hill
-            else if (h.GetElevation() > 0.6)
+            else if (h.GetElevation() > 0.7)
             {
+                mf.mesh = Hill0;
+
+                // Set Hill token height
+                hexGO.GetComponent<HexComponent>().SetTokenHeight(0.5f);
+
                 // Forested Hill
                 if (h.GetMoisture() > 0.7)
+                {
                     mr.material = ForestHillMat;
+
+                    Instantiate(OuterTreePrefab, h.Position() + Vector3.up * .4f, Quaternion.identity * Quaternion.AngleAxis(60 * Random.Range(0, 7), Vector3.up), hexGO.transform);
+                    Instantiate(InnerTreePrefab, h.Position() + Vector3.up * 0.5f, Quaternion.identity * Quaternion.AngleAxis(Random.Range(-180,180), Vector3.up), hexGO.transform);
+
+                }
 
                 // Plain Hill
                 else
@@ -246,13 +281,18 @@ public class HexMap : MonoBehaviour {
                 mr.material = WetlandMat;
 
             // Flat Forest
-            else if (h.GetMoisture() > 0.3)
+            else if (h.GetMoisture() > 0.5)
+            {
                 mr.material = ForestFlatMat;
+
+                Instantiate(OuterTreePrefab, h.Position()+ Vector3.up * .1f, Quaternion.identity * Quaternion.AngleAxis(60 * Random.Range(0, 7), Vector3.up), hexGO.transform);
+                Instantiate(InnerTreePrefab, h.Position(), Quaternion.identity * Quaternion.AngleAxis(Random.Range(-180, 180), Vector3.up), hexGO.transform);
+
+            }
 
             // Flatland
             else
                 mr.material = FlatMat;
-
 
                 
         }
@@ -287,6 +327,16 @@ public class HexMap : MonoBehaviour {
             return Hexes[QRtoKey(q,r)];
     }
 
+    public GameObject GetHexComponentAt(int q, int r)
+    {
+
+        GameObject result = HexToGameObject[GetHexAt(q, r)];
+
+
+        return result;
+
+    }
+
     /// <summary>
     /// Converts a column and row value into the Hexes Dictionary code
     /// </summary>
@@ -312,6 +362,15 @@ public class HexMap : MonoBehaviour {
         }
 
         return hexesInRange.ToArray();
+    }
+
+
+    // Function to take Token gameObject from armyManager and place it on hex
+    public void PlaceTokenOnHex(GameObject token, int q, int r)
+    {
+        GameObject hexTemp = HexToGameObject[GetHexAt(q, r)];
+
+        hexTemp.GetComponent<HexComponent>().AddToken(token);
     }
 
 }

@@ -6,6 +6,7 @@ public class CameraController : MonoBehaviour {
 
     public float moveSpeed;
     public float offset;
+    public float zShift;
 
     bool CameraHasMoved;
     float mapWidth;
@@ -49,7 +50,7 @@ public class CameraController : MonoBehaviour {
 
             transform.position = new Vector3(Mathf.Clamp(transform.position.x, 0 + offset, mapWidth - offset),
                                          transform.position.y,
-                                         Mathf.Clamp(transform.position.z, 0 + offset, mapHeight - offset));
+                                         Mathf.Clamp(transform.position.z, 0 + zShift, mapHeight + zShift));
 
             CameraHasMoved = false;
         }
