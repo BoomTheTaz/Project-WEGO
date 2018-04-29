@@ -6,7 +6,6 @@ public class MouseController : MonoBehaviour {
 
     ArmyManager armyManager;
     HexComponent currentHexGO;
-    WarManager warManager;
 
 
     delegate void OnUpdate();
@@ -15,7 +14,6 @@ public class MouseController : MonoBehaviour {
 	private void Start()
 	{
         armyManager = FindObjectOfType<ArmyManager>();
-        warManager = FindObjectOfType<WarManager>();
         onUpdate = SettingUp;
 	}
 
@@ -41,7 +39,7 @@ public class MouseController : MonoBehaviour {
             {
                 if (hit.transform.gameObject.layer == LayerMask.NameToLayer("HexTile"))
                 {
-                    currentHexGO = hit.transform.GetComponent<HexComponent>();
+                    currentHexGO = hit.transform.GetComponentInParent<HexComponent>();
 
                     //Hex h = currentHexGO.GetHex();
 
@@ -65,7 +63,6 @@ public class MouseController : MonoBehaviour {
     }
 
     GameObject[] currentTokens;
-    Vector3 velocity = Vector3.zero;
     void InGameplay()
     {
 
@@ -75,29 +72,58 @@ public class MouseController : MonoBehaviour {
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
+
             // If we hit a hex, tell the HexComponent
             if (Physics.Raycast(ray, out hit, 100))
             {
+                // Only want to know if we hit a hex
                 if (hit.transform.gameObject.layer == LayerMask.NameToLayer("HexTile"))
                 {
-
-                    if (hit.transform.GetComponent<HexComponent>() != currentHexGO)
+                    // Ignore if clicking on same hex
+                    if (hit.transform.GetComponentInParent<HexComponent>() != currentHexGO)
                     {
                         // Deselect current HexComponent
                         if (currentHexGO != null)
                         {
                             currentHexGO.Deselected();
-                            currentTokens = null;
+
+                            // Deactivate token colliders
+                            for (int i = 0; i < currentTokens.Length; i++)
+                            {
+
+                                if (currentTokens[i] != null)
+                                {
+                                    currentTokens[i].GetComponent<Token>().DeactivateCollider();
+
+                                    currentTokens[i] = null;
+                                }
+                            }
                         }
 
+
                         // Get HexComponent and associated Hex
-                        currentHexGO = hit.transform.GetComponent<HexComponent>();
+                        currentHexGO = hit.transform.GetComponentInParent<HexComponent>();
 
                         //Hex h = currentHexGO.GetHex();
 
                         currentTokens = currentHexGO.Selected();
+                        // Activate Token Colliders
+                        foreach (var t in currentTokens)
+                        {
+                            if(t!=null)
+                                t.GetComponent<Token>().ActivateCollider();
+                        }
 
                     }
+                }
+
+                // Check if we hit an active token
+                if (hit.transform.gameObject.layer == LayerMask.NameToLayer("Token"))
+                {
+
+                    hit.transform.GetComponent<Token>().ToggleSelect();
+
+
                 }
 
 
@@ -106,8 +132,11 @@ public class MouseController : MonoBehaviour {
 
         if (Input.GetMouseButtonDown(1))
         {
+            // Only care if there are tokens to move
+            // TODO Fix this too care about something else
             if (currentTokens != null)
             {
+                // Raycast
                 RaycastHit hit;
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
@@ -116,16 +145,12 @@ public class MouseController : MonoBehaviour {
                 {
                     if (hit.transform.gameObject.layer == LayerMask.NameToLayer("HexTile"))
                     {
-
-                        if (hit.transform.GetComponent<HexComponent>() != currentHexGO)
+                        // If it is a new hex, Register Selected tokens to move there
+                        if (hit.transform.GetComponentInParent<HexComponent>() != currentHexGO)
                         {
-                            foreach (var t in currentTokens)
-                            {
-                                if (t != null)
-                                    t.transform.parent = hit.transform.GetComponent<HexComponent>().TokenPlacement;
-                            }
+                            currentHexGO.RegisterTokensToMove(hit.transform.GetComponentInParent<HexComponent>());
 
-                            warManager.MoveTokens(currentTokens,hit.transform.GetComponent<HexComponent>().TokenPlacement);
+                            //warManager.MoveTokens(currentTokens,hit.transform.GetComponent<HexComponent>().TokenPlacement);
                         }
                     }
 

@@ -10,7 +10,18 @@ public class WarManager : MonoBehaviour {
     MouseController mouse;
     UIManager UI;
 
-    bool thingsToMove = false;
+    List<Token> TokensToMove = new List<Token>();
+    List<Token> TokensToRemove = new List<Token>();
+
+    // Delegate to trigger movement of tokens
+    delegate void MovementUpdate();
+    MovementUpdate UpdateTokenMovement;
+
+
+    Vector3 velocity;
+    Transform Target;
+    GameObject[] ToMove;
+
 
 	// Use this for initialization
 	void Start () {
@@ -24,27 +35,21 @@ public class WarManager : MonoBehaviour {
 	
     // Update is called once per frame
 	void Update () {
-       
-        if (thingsToMove)
-        {
-            foreach (var t in ToMove)
-            {
-                if (t != null)
-                {
-                    t.transform.position = Vector3.SmoothDamp(t.transform.position, Target.position, ref velocity, 0.25f);
 
-                    // Stop if close enough
-                    if (Vector3.Distance(t.transform.position, Target.position) < .01f)
-                    {
-                        thingsToMove = false;
-                    }
-                }
-            }
+        // Test key for activating token movement
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            Debug.Log("Instructing to move tokens");
+            UpdateTokenMovement += MoveTokens;
         }
+
+        // Call Token movement delegate if not null
+        if (UpdateTokenMovement != null)
+            UpdateTokenMovement();
 
 	}
 
-
+    // Call after setup complete, ensures that everything knows setup is done
     public void FinishedSettingUp()
     {
         IsSettingUp = false;
@@ -53,14 +58,61 @@ public class WarManager : MonoBehaviour {
         Debug.Log("Setup is complete!");
     }
 
-    Vector3 velocity;
-    Transform Target;
-    GameObject[] ToMove;
-    public void MoveTokens(GameObject[] go, Transform target)
+    // Add inputted token to List of TokensToMove
+    public void RegisterTokenToMove(Token token)
     {
-        thingsToMove = true;
-        ToMove = go;
-        Target = target;
+        TokensToMove.Add(token);
+    }
+
+    // Remove inputted token from List of TokensToMove
+    public void UnregisterTokenToMove(Token token)
+    {
+        
+        // FIXME Decide if this if check is necessary
+
+        if (TokensToMove.Contains(token))
+            TokensToMove.Remove(token);
+
+        Debug.Log(TokensToMove.Count);
 
     }
+
+
+
+    // Move all registered Tokens
+    void MoveTokens()
+    {
+        // Move every token registered
+        foreach (var t in TokensToMove)
+        {
+            
+            // If token.move() is true, that means close enough to target position,
+            // so unregister that token
+            if (t.Move() == true)
+            {
+                TokensToRemove.Add(t);
+
+            }
+        }
+
+        if (TokensToRemove.Count > 0)
+        {
+            foreach (var r in TokensToRemove)
+            {
+                TokensToMove.Remove(r);
+                r.Deselect();
+            }
+
+            TokensToRemove.Clear();
+        }
+
+        // If there are no tokens left to move, unregister delegate
+        if (TokensToMove.Count == 0)
+        {
+            Debug.Log("All tokens done moving");
+            UpdateTokenMovement = null;
+        }
+    }
+
+
 }

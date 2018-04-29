@@ -5,6 +5,8 @@ using UnityEngine;
 public class ArmyManager : MonoBehaviour {
 
     public GameObject TokenPrefab;
+    public GameObject LeaderTokenPrefab;
+    public Sprite LeaderSprite;
     public Sprite[] Sprites;
 
     public Color MainColor;
@@ -18,10 +20,12 @@ public class ArmyManager : MonoBehaviour {
 
     bool firstToken = true;
 
+    GameObject Leader;
+
 	// Use this for initialization
 	void Start () {
 
-        Army = new GameObject[armySize];
+        Army = new GameObject[armySize+1];
 
         warManager = FindObjectOfType<WarManager>();
 
@@ -31,7 +35,15 @@ public class ArmyManager : MonoBehaviour {
 
     void CreateArmy()
     {
-        for (int i = 0; i < armySize; i++)
+        // Create Leader Token
+        Leader = Instantiate(LeaderTokenPrefab);
+        Leader.GetComponent<Transform>().position += Vector3.down;
+        Leader.GetComponent<LeaderToken>().SetUp(MainColor, AccentColor, LeaderSprite, warManager);
+        Army[0] = Leader;
+        AvailableUnits++;
+
+
+        for (int i = 1; i < armySize+1; i++)
         {
             // Create Token
             GameObject t = Instantiate(TokenPrefab);
@@ -45,11 +57,11 @@ public class ArmyManager : MonoBehaviour {
 
             if (firstToken == true)
             {
-                t.GetComponent<Token>().SetUp(MainColor, AccentColor, Sprites[Random.Range(0, 2)]);
+                t.GetComponent<Token>().SetUp(MainColor, AccentColor, Sprites[Random.Range(0, 2)],warManager);
                 firstToken = false;
             }
             else
-                t.GetComponent<Token>().SetUp(AccentColor, Sprites[Random.Range(0,2)]);
+                t.GetComponent<Token>().SetUp(AccentColor, Sprites[Random.Range(0,2)],warManager);
 
             // Add token to the army
             Army[AvailableUnits] = t;
@@ -58,6 +70,8 @@ public class ArmyManager : MonoBehaviour {
             AvailableUnits++;
 
         }
+
+
     }
 
     // Retrieve a token from the army list
