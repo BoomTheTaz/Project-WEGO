@@ -4,8 +4,11 @@ using UnityEngine;
 
 public class LeaderToken : Token {
 
-	
-
+    // Do nothing
+	public override void RefactorTarget()
+	{
+        return;
+	}
 
 
 }

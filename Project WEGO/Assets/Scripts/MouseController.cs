@@ -149,7 +149,6 @@ public class MouseController : MonoBehaviour {
                         if (hit.transform.GetComponentInParent<HexComponent>() != currentHexGO)
                         {
                             currentHexGO.RegisterTokensToMove(hit.transform.GetComponentInParent<HexComponent>());
-
                             //warManager.MoveTokens(currentTokens,hit.transform.GetComponent<HexComponent>().TokenPlacement);
                         }
                     }
@@ -160,6 +159,25 @@ public class MouseController : MonoBehaviour {
 
 
         }
+    }
+
+    void ClearCurrentTokens()
+    {
+        for (int i = 0; i < currentTokens.Length; i++)
+        {
+            if (currentTokens[i] != null)
+            {
+                currentTokens[i].GetComponent<Token>().Deselect();
+                currentTokens[i] = null;
+            }
+        }
+    }
+
+    public void StartingMove()
+    {
+        ClearCurrentTokens();
+        currentHexGO.Deselected();
+
     }
 
 }

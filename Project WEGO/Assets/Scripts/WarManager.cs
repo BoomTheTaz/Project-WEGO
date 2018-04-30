@@ -41,6 +41,7 @@ public class WarManager : MonoBehaviour {
         {
             Debug.Log("Instructing to move tokens");
             UpdateTokenMovement += MoveTokens;
+            mouse.StartingMove();
         }
 
         // Call Token movement delegate if not null
@@ -73,7 +74,6 @@ public class WarManager : MonoBehaviour {
         if (TokensToMove.Contains(token))
             TokensToMove.Remove(token);
 
-        Debug.Log(TokensToMove.Count);
 
     }
 

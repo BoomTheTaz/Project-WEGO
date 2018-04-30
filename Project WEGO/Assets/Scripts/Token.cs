@@ -4,19 +4,33 @@ using UnityEngine;
 
 public class Token : MonoBehaviour
 {
-
+    // Customizing Options
     public SpriteRenderer spriteRenderer;
     public Material MainMaterial;
     public Material AccentMaterial;
     public GameObject Outliner;
     public Color OutlineColor;
 
+    // External Components
+    BoxCollider coll;
+    WarManager warManager;
+
+    // Current Locations
+    HexComponent CurrentHexGO;
+    int currentLocationOnHex;
+
+    // Hex Moving to
+    HexComponent NextHexGO;
+    Transform targetTransform;
+    int nextLocationOnHex;
+
+    // Unit Data
+    UnitStats unitStats;
+
+    // Flags
     bool isCurrentlySelected = false;
     bool isRegisteredToMove = false;
 
-    BoxCollider coll;
-    WarManager warManager;
-    Transform targetTransform;
 
     public float TimeToMove = 0.3f;
 
@@ -30,34 +44,46 @@ public class Token : MonoBehaviour
     }
 
     // Only called first time, sets material colors and sprite
-    public void SetUp(Color main, Color accent, Sprite s, WarManager w)
+    public void SetUp(Color main, Color accent, string type, WarManager w)
     {
-        if (transform.GetComponent<LeaderToken>() != null)
-            Debug.Log("Setting pu leader");
-
+        // Set Sprite
         spriteRenderer.color = accent;
-        spriteRenderer.sprite = s;
+        spriteRenderer.sprite = Resources.Load<Sprite>(type);
 
-        if (Outliner.GetComponent<MeshRenderer>() == null)
-            Debug.Log("Well");
-
-        Outliner.GetComponent<MeshRenderer>().material.color = OutlineColor;
+        // Set Material Colors
         MainMaterial.color = main;
         AccentMaterial.color = accent;
 
+        Outliner.GetComponent<MeshRenderer>().material.color = new Color (Random.Range(0,256),Random.Range(0, 256),Random.Range(0, 256));
+
+        // Store WarManager
         warManager = w;
+
+
+        unitStats = UnitStatsTemplate.GetStatsForUnit(type);
+
+        Debug.Log(unitStats.Type);
+        Debug.Log(string.Format("Attack: {0}\nDefense: {1}\nMovement: {2}", unitStats.Attack, unitStats.Defense, unitStats.Movement));
 
     }
 
 
     // Function for when material has already been set,
     // Only necessary to change sprite renderer color and set sprite
-    public void SetUp(Color accent, Sprite s, WarManager w)
+    public void SetUp(Color accent, string type, WarManager w)
     {
+        // Set Sprite
         spriteRenderer.color = accent;
-        spriteRenderer.sprite = s;
-        Outliner.GetComponent<MeshRenderer>().material.color = OutlineColor;
+        spriteRenderer.sprite = Resources.Load<Sprite>(type);
 
+        //Outliner.GetComponent<MeshRenderer>().material.color = new Color(Random.Range(0, 256), Random.Range(0, 256), Random.Range(0, 256));
+
+
+        unitStats = UnitStatsTemplate.GetStatsForUnit(type);
+        Debug.Log(unitStats.Type);
+        Debug.Log(string.Format("Attack: {0}\nDefense: {1}\nMovement: {2}", unitStats.Attack, unitStats.Defense, unitStats.Movement));
+
+        // Store WarManager
         warManager = w;
     }
 
@@ -98,29 +124,65 @@ public class Token : MonoBehaviour
     }
 
 
-    public void RegisterToMove(Transform t)
+    public void RegisterToMove(HexComponent h)
     {
-        if (t == null)
+        // Break out immediately if not selected
+        if (isCurrentlySelected == false)
+            return;
+
+
+        // Check if Leader Token
+        if (GetComponent<LeaderToken>() != null)
         {
-            Debug.Log("Cannot move there. Move components on tile first.");
+            if (isRegisteredToMove == true)
+                warManager.UnregisterTokenToMove(this);
+
+            NextHexGO = h;
+            SetTarget(NextHexGO.LeaderLocation);
+            warManager.RegisterTokenToMove(this);
+            isRegisteredToMove = true;
             return;
         }
-        if (isCurrentlySelected == true)
+
+        // If the token can reserve a spot on the new hex
+        if (h.AnyVacancies() == true)
         {
+            // If token already registered elsewhere, be sure to decrement 
+            // reservations on previously assigned NextHexGO
             if (isRegisteredToMove == true)
             {
                 warManager.UnregisterTokenToMove(this);
+
+                NextHexGO.DecrementReservation(nextLocationOnHex);
             }
-            SetTarget(t);
+
+            // Set next hexGO
+            NextHexGO = h;
+
+            // Unreserve current spot
+            CurrentHexGO.DecrementReservation(currentLocationOnHex);
+
+            SetTarget(NextHexGO.GetNextAvailableTokenLocation());
+            SetNextLocationOnHex(targetTransform);
             warManager.RegisterTokenToMove(this);
             isRegisteredToMove = true;
+
+        }
+        else
+        {
+            Debug.Log("Cannot move there. Move components on tile first.");
+            return;
         }
     }
 
     public void SetTarget(Transform t)
     {
         targetTransform = t;
-        transform.parent = t;
+    }
+
+    public void SetTargetAsParent()
+    {
+        transform.parent = targetTransform;
     }
 
     public bool IsCurrentlySelected()
@@ -132,6 +194,7 @@ public class Token : MonoBehaviour
     float StartingDistance = -1;
     float currentDistance;
     Vector3 additionalHeight;
+
     public bool Move()
     {
         if (targetTransform == null)
@@ -141,8 +204,16 @@ public class Token : MonoBehaviour
             return true;
         }
 
+        // Things to do only the first time through
         if (StartingDistance < 0)
+        {
+            // Try to refactor
+            // TODO Find a way to not have to call this on every token, maybe
+            RefactorTarget();
+
             StartingDistance = Vector3.Distance(transform.position, targetTransform.position);
+            SetTargetAsParent();
+        }
         
 
         currentDistance = Vector3.Distance(transform.position, targetTransform.position);
@@ -160,16 +231,89 @@ public class Token : MonoBehaviour
         // Return true if both angle and rotation are close enough to target
         if (Vector3.Distance(transform.position, targetTransform.position) < .01f && Quaternion.Angle(transform.rotation, targetTransform.rotation) < 0.5f)
         {
-            //transform.parent = targetTransform;
+            // Reset "flags" and current/Next hexGO
             StartingDistance = -1;
+            isRegisteredToMove = false;
+            CurrentHexGO = NextHexGO;
+            NextHexGO = null;
+            currentLocationOnHex = nextLocationOnHex;
+            nextLocationOnHex = -1;
+            DeactivateCollider();
+
             return true;
         }
         else
             return false;
     }
 
+    public virtual void RefactorTarget()
+    {
+        NextHexGO.DecrementReservation(nextLocationOnHex);
+        SetTarget(NextHexGO.GetNextAvailableTokenLocation());
+        SetNextLocationOnHex(targetTransform);
+    }
+
     public Transform GetTargetTransform()
     {
         return targetTransform;
     }
+
+    public void SetCurrentHex(HexComponent h)
+    {
+        CurrentHexGO = h;
+    }
+
+    public bool IsRegisteredToMove()
+    {
+        return isRegisteredToMove;
+    }
+
+    public void SetCurrentLocationOnHex(Transform t)
+    {
+        currentLocationOnHex = TransformToLocationOnHex(t);
+    }
+
+    public void SetNextLocationOnHex(Transform t)
+    {
+        nextLocationOnHex = TransformToLocationOnHex(t);
+    }
+
+    int TransformToLocationOnHex(Transform t)
+    {
+        int result;
+        switch ((int)t.rotation.eulerAngles.y)
+        {
+            case 120:
+                result = 0;
+                break;
+
+            case 180:
+                result = 1;
+                break;
+
+            case 60:
+                result = 2;
+                break;
+
+            case 240:
+                result = 3;
+                break;
+
+            case 0:
+                result = 4;
+                break;
+
+            case 300:
+                result = 5;
+                break;
+
+
+            default:
+                result = -1;
+                Debug.LogError("THIS SHOULDN'T BE HAPPENING. SEEK HELP IMMEDIATELY!");
+                break;
+        }
+        return result;
+    }
+
 }
