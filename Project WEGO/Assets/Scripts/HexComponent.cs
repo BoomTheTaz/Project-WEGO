@@ -286,21 +286,12 @@ public class HexComponent : MonoBehaviour
         // Case for when no Tokens are selected
         if (GetMinMovement() == false)
         {
-            Debug.Log("NONE SELECTED");
-
             if (ValidHexes != null)
                 UnoutlineValidHexes();
 
             NoneSelected = true;
             return;
         }
-
-        if (NoneSelected == true)
-        {
-            OutlineValidHexes(null);
-        }
-
-        Debug.Log(string.Format("Previous: {0}\nCurrent: {1}", prevMinMovement, minMovement));
 
         Dictionary<Hex, HexComponent> tempValidHexes;
         List<HexComponent> HexesToOutline = new List<HexComponent>();
@@ -356,8 +347,17 @@ public class HexComponent : MonoBehaviour
 
         ValidHexes = tempValidHexes;
 
+        // Case when previous Deselection led to none being drawn,
+        // It is then necessary to redraw before proceeding
+
+        if (NoneSelected == true)
+        {
+            OutlineValidHexes(null);
+            NoneSelected = false;
+        }
+        else
         // This should only evaluate outline on new hexes
-        OutlineValidHexes(HexesToOutline);
+            OutlineValidHexes(HexesToOutline);
     }
 
     // returns true if there is at least one token selected, false if none selected
