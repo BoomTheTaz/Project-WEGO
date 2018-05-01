@@ -6,6 +6,7 @@ public class MouseController : MonoBehaviour {
 
     ArmyManager armyManager;
     HexComponent currentHexGO;
+    Token[] currentTokens;
 
 
     delegate void OnUpdate();
@@ -62,7 +63,6 @@ public class MouseController : MonoBehaviour {
         onUpdate = InGameplay;
     }
 
-    GameObject[] currentTokens;
     void InGameplay()
     {
 
@@ -93,7 +93,7 @@ public class MouseController : MonoBehaviour {
 
                                 if (currentTokens[i] != null)
                                 {
-                                    currentTokens[i].GetComponent<Token>().DeactivateCollider();
+                                    currentTokens[i].DeactivateCollider();
 
                                     currentTokens[i] = null;
                                 }
@@ -111,7 +111,7 @@ public class MouseController : MonoBehaviour {
                         foreach (var t in currentTokens)
                         {
                             if(t!=null)
-                                t.GetComponent<Token>().ActivateCollider();
+                                t.ActivateCollider();
                         }
 
                     }
@@ -167,7 +167,7 @@ public class MouseController : MonoBehaviour {
         {
             if (currentTokens[i] != null)
             {
-                currentTokens[i].GetComponent<Token>().Deselect();
+                currentTokens[i].Deselect();
                 currentTokens[i] = null;
             }
         }
@@ -177,6 +177,7 @@ public class MouseController : MonoBehaviour {
     {
         ClearCurrentTokens();
         currentHexGO.Deselected();
+        currentHexGO = null;
 
     }
 

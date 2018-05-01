@@ -473,3 +473,5 @@ MonoBehaviour:
   RedOutline: {fileID: 2100000, guid: 1ca86c971b2554e86a8355339023ab08, type: 2}
   BlueOutline: {fileID: 2100000, guid: 564e3a75ad1cf4d89aeceaf94d0fdf54, type: 2}
   YellowOutline: {fileID: 2100000, guid: 55004f98c27d943ed956fe675a89b79e, type: 2}
+  WhiteOutline: {fileID: 2100000, guid: 3844d36e3e61a4e6e84065f2da99d4f0, type: 2}
+  IsSelected: 0

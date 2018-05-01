@@ -110,7 +110,7 @@ MonoBehaviour:
   m_MinSize: {x: 713, y: 492}
   m_MaxSize: {x: 18008, y: 14042}
   vertical: 0
-  controlID: 26
+  controlID: 84
 --- !u!114 &6
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -179,8 +179,8 @@ MonoBehaviour:
     y: 503
     width: 769
     height: 247
-  m_MinSize: {x: 100, y: 100}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 102, y: 121}
+  m_MaxSize: {x: 4002, y: 4021}
   m_ActualView: {fileID: 15}
   m_Panes:
   - {fileID: 15}
@@ -313,14 +313,14 @@ MonoBehaviour:
     height: 482
   m_PersistentViewDataDictionary: {fileID: 0}
   m_SceneLighting: 1
-  lastFramingTime: 22446.787355065346
+  lastFramingTime: 4693.62079000473
   m_2DMode: 0
   m_isRotationLocked: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: 0.17242682, y: -0.04547429, z: 8.778866}
+    m_Target: {x: -0.24768388, y: 0.025631309, z: -0.42900103}
     speed: 2
-    m_Value: {x: 0.17242682, y: -0.04547429, z: 8.778866}
+    m_Value: {x: -0.24768388, y: 0.025631309, z: -0.42900103}
   m_RenderMode: 0
   m_ValidateTrueMetals: 0
   m_SceneViewState:
@@ -344,13 +344,13 @@ MonoBehaviour:
       speed: 2
       m_Value: 0
   m_Rotation:
-    m_Target: {x: 0.3615531, y: 0.61873215, z: -0.38438755, w: 0.581977}
+    m_Target: {x: -0.2437575, y: 0.72510815, z: -0.562061, w: -0.3144679}
     speed: 2
-    m_Value: {x: 0.3615529, y: 0.6187318, z: -0.3843873, w: 0.58197665}
+    m_Value: {x: -0.2437575, y: 0.72510815, z: -0.562061, w: -0.3144679}
   m_Size:
-    m_Target: 2.479013
+    m_Target: 0.67901313
     speed: 2
-    m_Value: 2.479013
+    m_Value: 0.67901313
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -497,7 +497,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: a0d2e0ffbed2e0ffded2e0ffb6f8e0ffbaf8e0ffbef8e0ffd0f8e0ffe0f8e0ffd664e4fff494e5ff0ab4e5ff1eb4e5ff2cb4e5ff3cb4e5ffcc1fe6ffd01fe6ff3821f2ff3c21f2ffc433f2ffc833f2fff275f5fff675f5ff9efbffff00000000ca280000
+    m_ExpandedIDs: 9efbffff00000000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -559,19 +559,19 @@ MonoBehaviour:
     m_ShowAllHits: 0
     m_SearchArea: 0
     m_Folders:
-    - Assets/Materials
+    - Assets/Scripts
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/Materials
+  - Assets/Scripts
   m_LastFoldersGridSize: 16
   m_LastProjectPath: /Users/Joe/Desktop/Github/Projects/Project-WEGO/Project WEGO
   m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: 78280000
-    m_LastClickedID: 10360
-    m_ExpandedIDs: 000000006c27000092280000ffffff7f
+    m_SelectedIDs: ba280000
+    m_LastClickedID: 10426
+    m_ExpandedIDs: 0000000074270000a6280000ffffff7f
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -599,7 +599,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 000000006c27000092280000
+    m_ExpandedIDs: 0000000074270000a6280000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 

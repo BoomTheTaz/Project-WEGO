@@ -33,10 +33,11 @@ public class ArmyManager : MonoBehaviour {
 	}
 
 
-    string[] types = { "Melee", "Ranged" };
+    string[] types = { "Melee", "Ranged", "Cavalry" };
 
     void CreateArmy()
     {
+
         // Create Leader Token
         Leader = Instantiate(LeaderTokenPrefab);
         Leader.GetComponent<Transform>().position += Vector3.down;
@@ -59,11 +60,11 @@ public class ArmyManager : MonoBehaviour {
 
             if (firstToken == true)
             {
-                t.GetComponent<Token>().SetUp(MainColor, AccentColor, types[Random.Range(0, 2)],warManager);
+                t.GetComponent<Token>().SetUp(MainColor, AccentColor, types[Random.Range(0, types.Length)],warManager);
                 firstToken = false;
             }
             else
-                t.GetComponent<Token>().SetUp(AccentColor, types[Random.Range(0,2)],warManager);
+                t.GetComponent<Token>().SetUp(AccentColor, types[Random.Range(0,types.Length)],warManager);
 
             // Add token to the army
             Army[AvailableUnits] = t;

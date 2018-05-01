@@ -12,17 +12,20 @@ public static class UnitStatsTemplate {
         switch (s)
         {
             case "Ranged":
-                result = new UnitStats(1, 2, 1);
+                result = new UnitStats(1, 2, 1,100);
                 break;
 
             case "Melee":
-                result = new UnitStats(2, 1, 1);
+                result = new UnitStats(2, 1, 1,100);
                 break;
 
             case "Leader":
-                result = new UnitStats(3, 3, 3);
+                result = new UnitStats(3, 3, 3,100);
                 break;
 
+            case "Cavalry":
+                result = new UnitStats(2, 2, 2, 100);
+                break;
 
             default:
                 break;

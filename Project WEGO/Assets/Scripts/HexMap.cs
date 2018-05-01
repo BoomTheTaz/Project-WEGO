@@ -94,8 +94,11 @@ public class HexMap : MonoBehaviour {
                 // Instantiate a hex prefab at the hex data's indicated position
                 HexGO = Instantiate(HexPrefab, h.Position(), Quaternion.identity, this.transform);
 
+                // Pass self as HexMap
+                HexGO.GetComponent<HexComponent>().SetHexMap(this);
+
                 // Give the hex prefab a copy of the hex data
-                HexGO.GetComponentInChildren<HexComponent>().SetHex(h);
+                HexGO.GetComponent<HexComponent>().SetHex(h);
 
                 // Store new hex in Hexes Dictionary, using "column" + "row"
                 Hexes.Add(QRtoKey(column,row), h);
@@ -231,14 +234,13 @@ public class HexMap : MonoBehaviour {
         {
             GameObject hexGO = HexToGameObject[h];
 
-            // Default Token height
-            hexGO.GetComponent<HexComponent>().SetTokenHeight(0.05f);
-
             MeshRenderer mr = hexGO.GetComponentInChildren<MeshRenderer>();
             MeshFilter mf = hexGO.GetComponentInChildren<MeshFilter>();
 
             // ======= Material Conditions ======
             // TODO Tweak these numbers
+
+            string s = "";
 
             // Boulder
             if (h.GetElevation() > 1)
@@ -247,53 +249,69 @@ public class HexMap : MonoBehaviour {
                 mr.material = BoulderMat;
                 hexGO.transform.rotation *= Quaternion.AngleAxis(60 * Random.Range(0, 7), Vector3.up);
 
+                s = "Boulder";
+
             }
 
             // Pond
             else if (h.GetMoisture() > 1)
+            {
                 mr.material = PondMat;
+                s = "Pond";
+
+            }
 
             // Hill
             else if (h.GetElevation() > 0.7)
             {
                 mf.mesh = Hill0;
 
-                // Set Hill token height
-                hexGO.GetComponent<HexComponent>().SetTokenHeight(0.5f);
-
                 // Forested Hill
                 if (h.GetMoisture() > 0.7)
                 {
                     mr.material = ForestHillMat;
-
                     Instantiate(OuterTreePrefab, h.Position() + Vector3.up * .4f, Quaternion.identity * Quaternion.AngleAxis(60 * Random.Range(0, 7), Vector3.up), hexGO.transform);
-                    Instantiate(InnerTreePrefab, h.Position() + Vector3.up * 0.5f, Quaternion.identity * Quaternion.AngleAxis(Random.Range(-180,180), Vector3.up), hexGO.transform);
+                    Instantiate(InnerTreePrefab, h.Position() + Vector3.up * 0.5f, Quaternion.identity * Quaternion.AngleAxis(Random.Range(-180, 180), Vector3.up), hexGO.transform);
+                    s = "HillForest";
 
                 }
 
                 // Plain Hill
                 else
+                {
                     mr.material = HillMat;
+                    s = "Hill";
+
+                }
             }
 
             // Wetland
             else if (h.GetMoisture() > 0.8)
+            {
                 mr.material = WetlandMat;
+                s = "Wetland";
 
+            }
             // Flat Forest
             else if (h.GetMoisture() > 0.5)
             {
                 mr.material = ForestFlatMat;
 
-                Instantiate(OuterTreePrefab, h.Position()+ Vector3.up * .1f, Quaternion.identity * Quaternion.AngleAxis(60 * Random.Range(0, 7), Vector3.up), hexGO.transform);
+                Instantiate(OuterTreePrefab, h.Position() + Vector3.up * .1f, Quaternion.identity * Quaternion.AngleAxis(60 * Random.Range(0, 7), Vector3.up), hexGO.transform);
                 Instantiate(InnerTreePrefab, h.Position(), Quaternion.identity * Quaternion.AngleAxis(Random.Range(-180, 180), Vector3.up), hexGO.transform);
+                s = "FlatForest";
 
             }
 
             // Flatland
             else
+            {
                 mr.material = FlatMat;
+                s = "Flatland";
 
+            }
+
+            hexGO.GetComponent<HexComponent>().SetHexAsType(s);
                 
         }
     }
@@ -364,6 +382,26 @@ public class HexMap : MonoBehaviour {
         return hexesInRange.ToArray();
     }
 
+    // TODO: Decide if this is worthwhile or if Hex should just have knowledge of HexComponents
+    public Dictionary<Hex,HexComponent> GetHexGOWithinRange(Hex center, int radius)
+    {
+        if (radius < 0)
+        {
+            Debug.LogError("Cannot find hexes within a negative radius.");
+            return null;
+        }
+
+        Hex[] hexes = GetHexesWithinRange(center, radius);
+        Dictionary<Hex, HexComponent> results = new Dictionary<Hex, HexComponent>();
+
+        foreach (var h in hexes)
+        {
+            results.Add(h, HexToGameObject[h].GetComponent<HexComponent>());
+        }
+
+
+        return results;
+    }
 
     // Function to take Token gameObject from armyManager and place it on hex
     public void PlaceTokenOnHex(GameObject token, int q, int r)
