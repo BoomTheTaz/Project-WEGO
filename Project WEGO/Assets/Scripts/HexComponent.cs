@@ -13,7 +13,7 @@ public class HexComponent : MonoBehaviour
 
 
 
-    readonly bool[] SpotAvailable = {true,true,true,true,true,true};
+    readonly bool[] SpotAvailable = { true, true, true, true, true, true };
 
     Hex hex;
     string type;
@@ -30,26 +30,43 @@ public class HexComponent : MonoBehaviour
 
     int MaxTokens = 6;
     int minMovement;
+    int minAttack;
 
     bool allowTokensToUpdateValidHexes = false;
 
     public bool IsSelected;
+    bool SelectedThisTurn = false;
 
     Token[] Tokens = new Token[7];
 
     HexStats hexStats;
     HexMap hexMap;
 
+    static int maxRange = 4;
+    List<HexComponent>[] ValidMoveHexes = new List<HexComponent>[maxRange];
 
-    public void SetHexMap(HexMap map)
+    enum States { Moving, Attacking, Defending };
+
+    int currentState;
+
+
+	private void Start()
+	{
+        for (int i = 0; i < maxRange; i++)
+        {
+            ValidMoveHexes[i] = new List<HexComponent>();
+        }
+	}
+
+	public void SetHexMap(HexMap map)
     {
         hexMap = map;
     }
 
-	public void SetHex(Hex h)
+    public void SetHex(Hex h)
     {
         hex = h;
-            
+
     }
 
     public Hex GetHex()
@@ -72,7 +89,7 @@ public class HexComponent : MonoBehaviour
         {
 
             // TODO Make this better
-            if(token.GetComponent<LeaderToken>() != null)
+            if (token.GetComponent<LeaderToken>() != null)
             {
                 token.transform.parent = LeaderLocation;
                 token.GetComponent<Token>().SetCurrentHex(this);
@@ -113,37 +130,83 @@ public class HexComponent : MonoBehaviour
     }
 
 
+    int MaxMovement;
+    int MaxAttack;
+
     // Function called when clicked on during gameplay, prepares tokens, etc.
     public Token[] Selected()
     {
+        // Outline this in white
         OutlineWhite();
 
-        for (int c = 0; c < TokenLocations.Length; c++)
+        MaxAttack = 0;
+        MaxMovement = 0;
+
+        if (SelectedThisTurn == false)
         {
-            if (TokenLocations[c].childCount != 0)
-                Tokens[c] = TokenLocations[c].GetChild(0).gameObject.GetComponent<Token>();
+
+            // Get Tokens on Hex
+            for (int c = 0; c < TokenLocations.Length; c++)
+            {
+                if (TokenLocations[c].childCount != 0)
+                {
+                    Tokens[c] = TokenLocations[c].GetChild(0).gameObject.GetComponent<Token>();
+
+                    // Update Max Movement as necessary
+                    if (Tokens[c].GetMovementSpeed() > MaxMovement)
+                        MaxMovement = Tokens[c].GetMovementSpeed();
+
+                    // Update Max Attack as necessary
+                    if (Tokens[c].GetAttackRange() > MaxAttack)
+                        MaxAttack = Tokens[c].GetAttackRange();
+                }
+                else
+                    Tokens[c] = null;
+
+            }
+
+            // Check for Leader token
+            if (LeaderLocation.childCount != 0)
+            {
+                Tokens[6] = LeaderLocation.GetChild(0).gameObject.GetComponent<Token>();
+                if (Tokens[6].GetMovementSpeed() > MaxMovement)
+                    MaxMovement = Tokens[6].GetMovementSpeed();
+                if (Tokens[6].GetAttackRange() > MaxAttack)
+                    MaxAttack = Tokens[6].GetAttackRange();
+
+            }
             else
-                Tokens[c] = null;
+                Tokens[6] = null;
 
+
+            // Get Valid Hexes for movement and Attacking
+            List<HexComponent>[] temp = hexMap.GetValidMoveHexes(this);
+            for (int l = 0; l < maxRange; l++)
+            {
+                foreach (var i in temp[l])
+                {
+                    ValidMoveHexes[l].Add(i);
+                }
+            }
+
+
+            SelectedThisTurn = true;
         }
-
-        if (LeaderLocation.childCount != 0)
-            Tokens[6] = LeaderLocation.GetChild(0).gameObject.GetComponent<Token>();
-        else
-            Tokens[6] = null;
-
 
         SelectAllTokens();
         IsSelected = true;
-        allowTokensToUpdateValidHexes = true;
 
-        GetHexesInMovementRange();
 
-        if (ValidHexes == null)
+        if (ValidMoveHexes == null)
             Debug.Log("Valid Hexes still null.");
+       
+        allowTokensToUpdateValidHexes = true;
+        UpdateMinValues();
+        DrawOutlines();
 
-        OutlineValidHexes(null);
-        NoneSelected = false;
+        currentState = (int)States.Moving;
+
+
         return Tokens;
     }
 
@@ -151,10 +214,6 @@ public class HexComponent : MonoBehaviour
     {
         // TODO Figure this ish out
 
-        //for (int i = 0; i < Tokens.Length; i++)
-        //{
-        //    Tokens[i] = null;
-        //}
 
         Outliner.SetActive(false);
         IsSelected = false;
@@ -163,21 +222,22 @@ public class HexComponent : MonoBehaviour
         if (minMovement != -1)
         {
             UnoutlineValidHexes();
-            minMovement = -1;
         }
 
-        ValidHexes = null;
-        NoneSelected = false;
         foreach (var t in Tokens)
         {
             if (t != null)
+            {
                 t.Deselect();
+                t.DeactivateCollider();
+            }
         }
     }
 
 
     public void SelectAllTokens()
     {
+        
         foreach (var t in Tokens)
         {
             if (t != null)
@@ -191,22 +251,41 @@ public class HexComponent : MonoBehaviour
 
     public void RegisterTokensToMove(HexComponent hexGO)
     {
-        foreach (var t in Tokens)
+        // Only register if it is a valid move
+        if (IsValidMove(hexGO) == true)
         {
-            if (t != null)
+            foreach (var t in Tokens)
             {
-                //if (t.GetComponent<LeaderToken>() != null)
-                //{
-                //    t.GetComponent<Token>().RegisterToMove(hexGO);
-                //}
-                //else
-                //t.GetComponent<Token>().RegisterToMove(hexGO);
+                if (t != null)
+                {
+                    //if (t.GetComponent<LeaderToken>() != null)
+                    //{
+                    //    t.GetComponent<Token>().RegisterToMove(hexGO);
+                    //}
+                    //else
+                    //t.GetComponent<Token>().RegisterToMove(hexGO);
 
-                t.RegisterToMove(hexGO);
-
-                t.Deselect();
+                    t.RegisterToMove(hexGO);
+                    allowTokensToUpdateValidHexes = false;
+                    t.Deselect();
+                    allowTokensToUpdateValidHexes = true;
+                    UpdateMinValues();
+                }
             }
         }
+        else
+            Debug.Log("At least one piece cannot move there. Please pick an outlined spot.");
+    }
+
+    bool IsValidMove(HexComponent h)
+    {
+        for (int i = 0; i < minMovement; i++)
+        {
+            if (ValidMoveHexes[i].Contains(h)) 
+                return true;
+        }
+
+        return false;
     }
 
     //int VacanciesFilled = 0;
@@ -224,18 +303,6 @@ public class HexComponent : MonoBehaviour
         Debug.LogError("No Vacancies!");
         return null;
 
-    }
-
-    int NumTokensCurrently()
-    {
-        int count = 0;
-        foreach (var l in TokenLocations)
-        {
-            if (l.childCount != 0)
-                count++;
-        }
-
-        return count;
     }
 
     public void DecrementReservation(int spot)
@@ -264,162 +331,115 @@ public class HexComponent : MonoBehaviour
 
     }
 
-    Dictionary<Hex,HexComponent> ValidHexes;
     int prevMinMovement;
-    bool NoneSelected = false;
 
-    public void GetHexesInMovementRange()
+    // TODO Implement Attack
+    int prevMinAttack;
+
+    // Tokens will call this when they are selected/deselected
+    public void UpdateMinValues()
     {
-
-
         if (allowTokensToUpdateValidHexes == false)
-        {
-            Debug.Log("WHY HEERE");
-
             return;
-        }
 
         prevMinMovement = minMovement;
 
+        if (prevMinMovement == -1)
+            prevMinAttack = 0;
 
-
-        // Case for when no Tokens are selected
-        if (GetMinMovement() == false)
-        {
-            if (ValidHexes != null)
-                UnoutlineValidHexes();
-
-            NoneSelected = true;
-            return;
-        }
-
-        Dictionary<Hex, HexComponent> tempValidHexes;
-        List<HexComponent> HexesToOutline = new List<HexComponent>();
-
-
-        // If minMovement has not changed, no need to find valid hexes again
-        if (prevMinMovement == minMovement && minMovement != -1)
-        {
-            Debug.Log("No change in min movement.");
-            return;
-        }
-
-        if (minMovement < 0)
-        {
-            return;
-        }
-        tempValidHexes = hexMap.GetHexGOWithinRange(hex, minMovement);
-        tempValidHexes = RemoveUntraversable(tempValidHexes);
-
-        tempValidHexes.Remove(hex);
-
-        // We need to compare previous and current valid hexes
-        // to outline necessary hexes and prevent over calling of outlining
-        if (ValidHexes != null)
-        {
-            // Need To outline more
-            if (tempValidHexes.Count > ValidHexes.Count)
-            {
-                foreach (var h in tempValidHexes.Keys)
-                {
-                    // If previous valid hexes does not contain key, outline that Hex
-                    if (ValidHexes.ContainsKey(h) == false)
-                        HexesToOutline.Add(tempValidHexes[h]);
-                    
-                }
-            }
-
-            // Need To outline some
-            else if (tempValidHexes.Count < ValidHexes.Count)
-            {
-
-                foreach (var h in ValidHexes.Keys)
-                {
-
-                    // If previous valid hex has one that current doesn't, outline it
-                    if (tempValidHexes.ContainsKey(h) == false)
-                        ValidHexes[h].NoOutline();
-
-                }
-
-            }
-        }
-
-        ValidHexes = tempValidHexes;
-
-        // Case when previous Deselection led to none being drawn,
-        // It is then necessary to redraw before proceeding
-
-        if (NoneSelected == true)
-        {
-            OutlineValidHexes(null);
-            NoneSelected = false;
-        }
-        else
-        // This should only evaluate outline on new hexes
-            OutlineValidHexes(HexesToOutline);
-    }
-
-    // returns true if there is at least one token selected, false if none selected
-    bool GetMinMovement()
-    {
         minMovement = -1;
-        bool AnySelected = false;
+
+        // Cycle through Each token and check the selected ones for min movement
         foreach (Token t in Tokens)
         {
-            // Count movement only if token is currently selected
-            if (t != null && t.IsCurrentlySelected() && (t.GetMovementSpeed() < minMovement || minMovement < 0))
+            if (t != null && t.IsCurrentlySelected())
             {
-                minMovement = t.GetMovementSpeed();
-                AnySelected = true;
+                // Update if movespeed is less or not set, i.e. -1
+                if (t.GetMovementSpeed() < minMovement || minMovement < 0)
+                {
+                    minMovement = t.GetMovementSpeed();
+                }
+
+                // Update if attack range is less or not set, i.e. -1
+                if (t.GetAttackRange() < minAttack || minMovement < 0)
+                {
+                    minAttack = t.GetAttackRange();
+                }
+
             }
         }
 
-        return AnySelected;
+        // None Selected, Unoutline everything
+        if (minMovement == -1)
+        {
+            minMovement++;
+
+            for (int i = 0; i < prevMinMovement; i++)
+            {
+                foreach (var item in ValidMoveHexes[i])
+                {
+                    item.NoOutline();
+                }
+            }
+        }
+
+        // If minMovement has changed, update the outlines
+        if (prevMinMovement != minMovement  && currentState == (int)States.Moving)
+        {
+            UpdateOutlines();
+        }
+
     }
 
-    Dictionary<Hex,HexComponent> RemoveUntraversable(Dictionary<Hex,HexComponent> d)
+
+    void DrawOutlines()
     {
-        List<Hex> toRemove = new List<Hex>();
-        foreach (var h in d.Keys)
+        for (int i = 0; i < minMovement; i++)
         {
-            if (d[h].IsTraversable() == false)
-                toRemove.Add(h);
+            foreach (var item in ValidMoveHexes[i])
+            {
+                OutlineAppropriately(item);
+            }
         }
-
-        foreach (var h in toRemove)
-        {
-            d.Remove(h);
-        }
-
-        return d;
     }
 
-
-    void OutlineValidHexes(List<HexComponent> l)
+    void UpdateOutlines()
     {
-        if (minMovement < 0)
-            return;
-
-
-        if (l == null)
+        // Outline updates will depend on current state
+        switch ((int)currentState)
         {
+            // If we are moving, update using move array
+            case (int)States.Moving:
 
-            foreach (var h in ValidHexes.Keys)
-            {
-                OutlineAppropriately(ValidHexes[h]);
-            }
-        }
+                // outline More
+                if (prevMinMovement < minMovement)
+                {
+                    for (int i = prevMinMovement; i < minMovement; i++)
+                    {
+                        foreach (var item in ValidMoveHexes[i])
+                        {
+                            OutlineAppropriately(item);
+                        }
+                    }
 
-        else
-        {
-            foreach (var i in l)
-            {
-                OutlineAppropriately(i);
-            }
+                }
+
+                // Unoutline some
+                else if (prevMinMovement > minMovement)
+                {
+
+
+                }
+
+
+
+                break;
+
+
+            default:
+                break;
         }
     }
-
 
     void OutlineAppropriately(HexComponent h)
     {
@@ -436,9 +456,12 @@ public class HexComponent : MonoBehaviour
     // TODO: Maybe compare with new outline to prevent over calling outliner.SetActive
     void UnoutlineValidHexes()
     {
-        foreach (var h in ValidHexes.Keys)
+        foreach (var l in ValidMoveHexes)
         {
-            ValidHexes[h].NoOutline();
+            foreach (var i in l)
+            {
+                i.NoOutline();
+            }
         }
     }
 
@@ -479,5 +502,41 @@ public class HexComponent : MonoBehaviour
     public int GetFatigueLevel()
     {
         return hexStats.FatigueValue;
+    }
+
+    public int GetMinMove()
+    {
+        return minMovement;
+    }
+
+    public int GetMinAttack()
+    {
+        return minAttack;
+    }
+
+    public string GetHexType()
+    {
+        return type;
+    }
+
+    public int GetMaxMovement()
+    {
+        return MaxMovement;
+    }
+
+    public int GetMaxAttack()
+    {
+        return MaxAttack;
+    }
+
+
+    public void ResetForNewTurn()
+    {
+        SelectedThisTurn = false;
+
+        for (int i = 0; i < maxRange; i++)
+        {
+            ValidMoveHexes[i].Clear();
+        }
     }
 }

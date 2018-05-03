@@ -62,9 +62,6 @@ public class Token : MonoBehaviour
 
         unitStats = UnitStatsTemplate.GetStatsForUnit(type);
 
-        Debug.Log(unitStats.Type);
-        Debug.Log(string.Format("Attack: {0}\nDefense: {1}\nMovement: {2}", unitStats.Attack, unitStats.Defense, unitStats.Movement));
-
     }
 
 
@@ -102,7 +99,7 @@ public class Token : MonoBehaviour
         isCurrentlySelected = true;
         Outliner.gameObject.SetActive(true);
 
-        CurrentHexGO.GetHexesInMovementRange();
+        CurrentHexGO.UpdateMinValues();
 
     }
 
@@ -111,7 +108,7 @@ public class Token : MonoBehaviour
         isCurrentlySelected = false;
         Outliner.gameObject.SetActive(false);
 
-        CurrentHexGO.GetHexesInMovementRange();
+        CurrentHexGO.UpdateMinValues();
 
     }
 
@@ -319,6 +316,11 @@ public class Token : MonoBehaviour
     public int GetMovementSpeed()
     {
         return unitStats.Movement;
+    }
+
+    public int GetAttackRange()
+    {
+        return unitStats.AttackRange;
     }
 
 }

@@ -9,6 +9,7 @@ public class WarManager : MonoBehaviour {
     public bool IsSettingUp = true;
     MouseController mouse;
     UIManager UI;
+    HexMap hexMap;
 
     List<Token> TokensToMove = new List<Token>();
     List<Token> TokensToRemove = new List<Token>();
@@ -28,6 +29,7 @@ public class WarManager : MonoBehaviour {
 
         mouse = FindObjectOfType<MouseController>();
         UI = FindObjectOfType<UIManager>();
+        hexMap = FindObjectOfType<HexMap>();
 
         UI.InSetup();
 
@@ -42,6 +44,7 @@ public class WarManager : MonoBehaviour {
             Debug.Log("Instructing to move tokens");
             UpdateTokenMovement += MoveTokens;
             mouse.StartingMove();
+            hexMap.OnTurnEnd();
         }
 
         // Call Token movement delegate if not null

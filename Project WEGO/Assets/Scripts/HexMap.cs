@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class HexMap : MonoBehaviour {
 
@@ -43,7 +44,12 @@ public class HexMap : MonoBehaviour {
         MapTileWidth = 12;
         MapTileHeight = 20;
         GenerateMap();
-	}
+
+        for (int i = 0; i < MaxRange; i++)
+        {
+            MoveToReturn[i] = new List<HexComponent>();
+        }
+    }
 
 
 	private void Update()
@@ -297,8 +303,8 @@ public class HexMap : MonoBehaviour {
             {
                 mr.material = ForestFlatMat;
 
-                Instantiate(OuterTreePrefab, h.Position() + Vector3.up * .1f, Quaternion.identity * Quaternion.AngleAxis(60 * Random.Range(0, 7), Vector3.up), hexGO.transform);
-                Instantiate(InnerTreePrefab, h.Position(), Quaternion.identity * Quaternion.AngleAxis(Random.Range(-180, 180), Vector3.up), hexGO.transform);
+                Instantiate(OuterTreePrefab, h.Position(), Quaternion.identity * Quaternion.AngleAxis(60 * Random.Range(0, 7), Vector3.up), hexGO.transform);
+                Instantiate(InnerTreePrefab, h.Position() + Vector3.up * .05f, Quaternion.identity * Quaternion.AngleAxis(Random.Range(-180, 180), Vector3.up), hexGO.transform);
                 s = "FlatForest";
 
             }
@@ -337,7 +343,7 @@ public class HexMap : MonoBehaviour {
     {
         if (Hexes.ContainsKey(QRtoKey(q,r)) == false)
         {
-            Debug.LogError("Cannot find Hex at (" + q.ToString() + "," + r.ToString() + ")");
+            Debug.Log("Cannot find Hex at (" + q.ToString() + "," + r.ToString() + ")");
             return null;
 
         }
@@ -403,12 +409,242 @@ public class HexMap : MonoBehaviour {
         return results;
     }
 
+
+
+
+
+    static int MaxRange = 4;
+    List<HexComponent>[] MoveToReturn = new List<HexComponent>[MaxRange];
+
+
+    // Sets Valid Attack and movement hexes within inputted HexComponent
+    public List<HexComponent>[] GetValidMoveHexes(HexComponent h)
+    {
+        totalHexes = 0;
+        // Clear List Array
+        for (int i = 0; i < MaxRange; i++)
+        {
+            MoveToReturn[i].Clear();
+        }
+
+        // Get Center Hex
+        Hex center = h.GetHex();
+        Hex testHex;
+
+        // Get range for search, Using max and then storing in HexComponent
+        int move = h.GetMaxMovement();
+
+        // loop times equals movement range
+        for (int i = 0; i < move; i++)
+        {
+            // For first loop, just look at center hex
+            if (i == 0)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    testHex = GetHexNeighbor(center, j);
+
+                    if (testHex != null)
+                        AnalyzeHexToMove(testHex,i);
+                }
+            }
+
+            // Otherwise, loop through previous list in array and check all neighbors
+            else
+            {
+                foreach (var item in MoveToReturn[i-1])
+                {
+                    for (int j = 0; j < 6; j++)
+                    {
+                        testHex = GetHexNeighbor(item.GetHex(), j);
+
+                        // Don't count center hex or null hexes
+                        if (testHex == center || testHex == null)
+                            continue;
+                        
+                        AnalyzeHexToMove(testHex, i);
+                    }
+                }
+
+            }
+        }
+        int sum = 0;
+
+        foreach (var l in MoveToReturn)
+        {
+            sum += l.Count();
+        }
+
+
+        HexesThisTurn.Add(h);
+
+        return MoveToReturn;
+    }
+
+    int totalHexes;
+    // Call this on all hexes to see if it should be added to the List array
+    void AnalyzeHexToMove(Hex h, int num)
+    {
+        // Iterate through num + 1, in case hex was added already this iteration
+        for (int i = 0; i < num+1; i++)
+        {
+            // Do not Add if hex already has been added
+            if (MoveToReturn[i].Contains(HexToGameObject[h].GetComponent<HexComponent>()))
+            {
+                return;
+            }
+        }
+
+        totalHexes++;
+        // Case depends on hex type
+        switch (HexToGameObject[h].GetComponent<HexComponent>().GetHexType())
+        {
+
+            case "Flatland":
+                MoveToReturn[num].Add(HexToGameObject[h].GetComponent<HexComponent>());
+                break;
+          
+            // Hill
+            case "Hill":
+                MoveToReturn[num].Add(HexToGameObject[h].GetComponent<HexComponent>());
+                break;
+
+            // Wetlands
+            case "Wetland":
+                MoveToReturn[num].Add(HexToGameObject[h].GetComponent<HexComponent>());
+                break;
+
+            // FlatForest
+            case "FlatForest":
+                MoveToReturn[num].Add(HexToGameObject[h].GetComponent<HexComponent>());
+                break;
+
+            // HillForest
+            case "HillForest":
+                MoveToReturn[num].Add(HexToGameObject[h].GetComponent<HexComponent>());
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    // TODO Write this code, use ring method
+    void GetValidAttackHexes(HexComponent h)
+    {
+        
+    }
+
+
     // Function to take Token gameObject from armyManager and place it on hex
     public void PlaceTokenOnHex(GameObject token, int q, int r)
     {
         GameObject hexTemp = HexToGameObject[GetHexAt(q, r)];
 
         hexTemp.GetComponent<HexComponent>().AddToken(token);
+    }
+
+
+    // Return Hex in given direction
+    // ======== DIRECTION CODE ==========
+    // 0: N
+    // 1: NE
+    // 2: SE
+    // 3: S
+    // 4: SW
+    // 5: NW
+
+    Hex GetHexNeighbor(Hex h, int dir)
+    {
+        Hex result = null;
+
+        switch (dir)
+        {
+            case 0:
+                result = GetHexAt(h.Q, h.R+1);
+                break;
+
+            case 1:
+                result = GetHexAt(h.Q+1, h.R);
+                break;
+
+            case 2:
+                result = GetHexAt(h.Q+1, h.R-1);
+                break;
+
+            case 3:
+                result = GetHexAt(h.Q, h.R-1);
+                break;
+
+            case 4:
+                result = GetHexAt(h.Q-1, h.R);
+                break;
+
+            case 5:
+                result = GetHexAt(h.Q-1, h.R+1);
+                break;
+
+            default:
+                Debug.Log("Invalid Neighbor range. Inputted Neighbor: " + dir.ToString());
+                break;
+        }
+
+        return result;
+    }
+
+
+    List<Hex> hexRing = new List<Hex>();
+    List<Hex> GetHexRing(Hex center, int radius)
+    {
+        // Clear previous HexRing
+        hexRing.Clear();
+
+        // Return center if 0 radius, throw error if negative radius
+        if (radius == 0)
+        {
+            hexRing.Add(center);
+            return hexRing;
+        }
+        else if (radius < 0)
+        {
+            Debug.LogError("Cannot find Hex Ring at a negative radius.");
+            return null;
+        }
+
+        // Find Start Hex
+        Hex toAdd = center;
+
+        // Go in direction 4 to make finding ring easier
+        for (int i = 0; i < radius; i++)
+        {
+            toAdd = GetHexNeighbor(toAdd, 4);
+        }
+
+        // Loop through every direction for radius numbers of neighbors
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < radius; j++)
+            {
+                toAdd = GetHexNeighbor(toAdd, i);
+                hexRing.Add(toAdd);
+            }
+        }
+
+
+        return hexRing;
+
+    }
+
+    List<HexComponent> HexesThisTurn = new List<HexComponent>();
+    public void OnTurnEnd()
+    {
+        // Reset HexComponents that were selected this turn
+
+        foreach (var h in HexesThisTurn)
+        {
+            h.ResetForNewTurn();
+        }
+
     }
 
 }

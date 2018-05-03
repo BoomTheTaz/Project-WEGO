@@ -95,7 +95,7 @@ public class MouseController : MonoBehaviour {
                                 {
                                     currentTokens[i].DeactivateCollider();
 
-                                    currentTokens[i] = null;
+                                    //currentTokens[i] = null;
                                 }
                             }
                         }
@@ -107,6 +107,7 @@ public class MouseController : MonoBehaviour {
                         //Hex h = currentHexGO.GetHex();
 
                         currentTokens = currentHexGO.Selected();
+
                         // Activate Token Colliders
                         foreach (var t in currentTokens)
                         {
@@ -134,7 +135,7 @@ public class MouseController : MonoBehaviour {
         {
             // Only care if there are tokens to move
             // TODO Fix this too care about something else
-            if (currentTokens != null)
+            if (currentTokens[0] != null || currentTokens[6] != null)
             {
                 // Raycast
                 RaycastHit hit;
@@ -149,7 +150,6 @@ public class MouseController : MonoBehaviour {
                         if (hit.transform.GetComponentInParent<HexComponent>() != currentHexGO)
                         {
                             currentHexGO.RegisterTokensToMove(hit.transform.GetComponentInParent<HexComponent>());
-                            //warManager.MoveTokens(currentTokens,hit.transform.GetComponent<HexComponent>().TokenPlacement);
                         }
                     }
 
@@ -168,15 +168,17 @@ public class MouseController : MonoBehaviour {
             if (currentTokens[i] != null)
             {
                 currentTokens[i].Deselect();
-                currentTokens[i] = null;
+                //currentTokens[i] = null;
             }
         }
     }
 
     public void StartingMove()
     {
-        ClearCurrentTokens();
-        currentHexGO.Deselected();
+        if (currentTokens != null)
+            ClearCurrentTokens();
+        if (currentHexGO != null)
+            currentHexGO.Deselected();
         currentHexGO = null;
 
     }
