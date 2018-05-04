@@ -31,6 +31,8 @@ public class HexComponent : MonoBehaviour
     int MaxTokens = 6;
     int minMovement;
     int minAttack;
+    int prevMinMovement;
+    int prevMinAttack;
 
     bool allowTokensToUpdateValidHexes = false;
 
@@ -44,6 +46,8 @@ public class HexComponent : MonoBehaviour
 
     static int maxRange = 4;
     List<HexComponent>[] ValidMoveHexes = new List<HexComponent>[maxRange];
+    List<HexComponent>[] ValidAttackHexes = new List<HexComponent>[maxRange];
+
 
     enum States { Moving, Attacking, Defending };
 
@@ -55,6 +59,7 @@ public class HexComponent : MonoBehaviour
         for (int i = 0; i < maxRange; i++)
         {
             ValidMoveHexes[i] = new List<HexComponent>();
+            ValidAttackHexes[i] = new List<HexComponent>();
         }
 	}
 
@@ -138,6 +143,8 @@ public class HexComponent : MonoBehaviour
     {
         // Outline this in white
         OutlineWhite();
+        hexMap.SetCurrentHexGO(this);
+        currentState = hexMap.CurrentState;
 
         MaxAttack = 0;
         MaxMovement = 0;
@@ -189,6 +196,8 @@ public class HexComponent : MonoBehaviour
                 }
             }
 
+
+            ValidAttackHexes = hexMap.GetValidAttackHexes(this);
 
             SelectedThisTurn = true;
         }
@@ -331,11 +340,6 @@ public class HexComponent : MonoBehaviour
 
     }
 
-    int prevMinMovement;
-
-    // TODO Implement Attack
-    int prevMinAttack;
-
     // Tokens will call this when they are selected/deselected
     public void UpdateMinValues()
     {
@@ -345,7 +349,7 @@ public class HexComponent : MonoBehaviour
         prevMinMovement = minMovement;
 
         if (prevMinMovement == -1)
-            prevMinAttack = 0;
+            prevMinMovement = 0;
 
         minMovement = -1;
 
@@ -391,16 +395,38 @@ public class HexComponent : MonoBehaviour
 
     }
 
-
+    // Called to outline valid hexes, used on hex selection and after no tokens selected
     void DrawOutlines()
     {
-        for (int i = 0; i < minMovement; i++)
+        switch ((int)currentState)
         {
-            foreach (var item in ValidMoveHexes[i])
-            {
-                OutlineAppropriately(item);
-            }
+            //case (int)States.Moving:
+                //for (int i = 0; i < minMovement; i++)
+                //{
+                //    foreach (var item in ValidMoveHexes[i])
+                //    {
+                //        OutlineAppropriately(item);
+                //    }
+                //}
+                //break;
+
+            case (int)States.Moving:
+                for (int i = 0; i < 4; i++)
+                {
+                    foreach (var item in ValidAttackHexes[i])
+                    {
+                        OutlineAppropriately(item);
+                    }
+                }
+                break;
+
+
+            default:
+                break;
         }
+
+
+
     }
 
     void UpdateOutlines()
@@ -538,5 +564,15 @@ public class HexComponent : MonoBehaviour
         {
             ValidMoveHexes[i].Clear();
         }
+    }
+
+    public float GetElevation()
+    {
+        return hexStats.TokenHeight;
+    }
+
+    public void UpdateCurrentState(int i)
+    {
+        currentState = i;
     }
 }

@@ -12,7 +12,7 @@ public static class UnitStatsTemplate {
         switch (s)
         {
             case "Ranged":
-                result = new UnitStats(1, 2, 1,100,2);
+                result = new UnitStats(1, 2, 1,100,3);
                 break;
 
             case "Melee":

@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum States { Moving, Attacking, Defending };
+
 public class MouseController : MonoBehaviour {
 
     ArmyManager armyManager;
     HexComponent currentHexGO;
     Token[] currentTokens;
-
+    int CurrentState;
 
     delegate void OnUpdate();
     OnUpdate onUpdate;
@@ -16,13 +18,13 @@ public class MouseController : MonoBehaviour {
 	{
         armyManager = FindObjectOfType<ArmyManager>();
         onUpdate = SettingUp;
+        CurrentState = (int)States.Moving;
 	}
 
 	// Update is called once per frame
 	void Update () {
         if (onUpdate != null)
             onUpdate();
-
 		
 	}
 

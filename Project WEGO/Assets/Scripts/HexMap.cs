@@ -29,7 +29,7 @@ public class HexMap : MonoBehaviour {
     public Mesh Flatland;
     public Mesh Hill0;
     public Mesh BoulderMesh;
-
+    public int CurrentState;
 
     // Tree prefabs
     public GameObject InnerTreePrefab;
@@ -38,6 +38,8 @@ public class HexMap : MonoBehaviour {
     // Store all hex Data in a dictionary
     readonly Dictionary<int, Hex> Hexes = new Dictionary<int, Hex>();
     Dictionary<Hex, GameObject> HexToGameObject = new Dictionary<Hex, GameObject>();
+
+    HexComponent CurrentHexGO;
 
 	// Use this for initialization
 	void Start () {
@@ -48,30 +50,14 @@ public class HexMap : MonoBehaviour {
         for (int i = 0; i < MaxRange; i++)
         {
             MoveToReturn[i] = new List<HexComponent>();
+            AttackToReturn[i] = new List<HexComponent>();
         }
     }
 
 
 	private void Update()
 	{
-        // Testing the GetHexAt function
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            //Hex testHex1 = GetHexAt(Random.Range(0, MapTileHeight), Random.Range(0, MapTileWidth));
-            //Hex testHex2 = GetHexAt(Random.Range(0, MapTileHeight), Random.Range(0, MapTileWidth));
-
-            //float dist = Hex.Distance(testHex1, testHex2);
-
-            //Debug.Log(string.Format("Got Tiles at ({0},{1}) and ({2},{3}).", testHex1.Q, testHex1.R, testHex2.Q, testHex2.R));
-            //Debug.Log("Distance: " + dist.ToString());
-
-            //Hex testHex = GetHexAt(Random.Range(0, MapTileHeight), Random.Range(0, MapTileWidth));
-            //int rad = 2;
-            //Hex[] tester = GetHexesWithinRange(testHex, rad);
-
-            //Debug.Log(string.Format("Found {0} hexes within {1} tiles of ({2},{3}).", tester.Length, rad, testHex.Q, testHex.R));
-
-        }
+        
 	}
 
 
@@ -341,9 +327,10 @@ public class HexMap : MonoBehaviour {
 
     public Hex GetHexAt(int q, int r)
     {
-        if (Hexes.ContainsKey(QRtoKey(q,r)) == false)
+        
+        if (Hexes.ContainsKey(QRtoKey(q,r)) == false || q < 0)
         {
-            Debug.Log("Cannot find Hex at (" + q.ToString() + "," + r.ToString() + ")");
+            //Debug.Log("Cannot find Hex at (" + q.ToString() + "," + r.ToString() + ")");
             return null;
 
         }
@@ -415,12 +402,12 @@ public class HexMap : MonoBehaviour {
 
     static int MaxRange = 4;
     List<HexComponent>[] MoveToReturn = new List<HexComponent>[MaxRange];
-
+    List<HexComponent>[] AttackToReturn = new List<HexComponent>[MaxRange];
 
     // Sets Valid Attack and movement hexes within inputted HexComponent
+    // TODO: Don't search for neighbors of a hex that has an enemy on it
     public List<HexComponent>[] GetValidMoveHexes(HexComponent h)
     {
-        totalHexes = 0;
         // Clear List Array
         for (int i = 0; i < MaxRange; i++)
         {
@@ -475,14 +462,14 @@ public class HexMap : MonoBehaviour {
             sum += l.Count();
         }
 
-
-        HexesThisTurn.Add(h);
+        // Add Hex to list of hexes accessed this turn to enable reset on turns end
+        if (HexesThisTurn.Contains(h) == false)
+            HexesThisTurn.Add(h);
 
         return MoveToReturn;
     }
 
-    int totalHexes;
-    // Call this on all hexes to see if it should be added to the List array
+    // Call this on all hexes to see if it should be added to the Movement List array
     void AnalyzeHexToMove(Hex h, int num)
     {
         // Iterate through num + 1, in case hex was added already this iteration
@@ -495,7 +482,6 @@ public class HexMap : MonoBehaviour {
             }
         }
 
-        totalHexes++;
         // Case depends on hex type
         switch (HexToGameObject[h].GetComponent<HexComponent>().GetHexType())
         {
@@ -530,11 +516,140 @@ public class HexMap : MonoBehaviour {
     }
 
     // TODO Write this code, use ring method
-    void GetValidAttackHexes(HexComponent h)
+    public List<HexComponent>[] GetValidAttackHexes(HexComponent h)
     {
-        
+        // Clear List Array
+        for (int i = 0; i < MaxRange; i++)
+        {
+            AttackToReturn[i].Clear();
+        }
+
+        // Get Center Hex
+        Hex center = h.GetHex();
+        bool OnHill = false;
+
+        if (h.GetElevation() > 0.2)
+            OnHill = true;
+
+        List<Hex> rings;
+        Hex test = null;
+
+        // Get range for search, Using max and then storing in HexComponent
+        int attack = h.GetMaxAttack();
+
+        // loop times equals movement range
+        for (int i = 0; i < attack; i++)
+        {
+            // Add all neighbors, unless Mountain
+            if (i == 0)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    test = GetHexNeighbor(center, j);
+
+                    if (test == null)
+                        continue;
+
+                    // In first ring, just add all neighbors except boulders
+                    if (HexToGameObject[test].GetComponent<HexComponent>().GetHexType() != "Boulder" )
+                        AttackToReturn[i].Add(HexToGameObject[test].GetComponent<HexComponent>());
+                }
+
+
+            }
+
+            // Check Hex ring and send hexes to be analyzed
+            else
+            {
+                Debug.Log("Checkpoint");
+                rings = GetHexRing(center, i + 1);
+
+                foreach (var item in rings)
+                {
+                    if (item != null)
+                        AnalyzeHexToAttack(center, item, i, OnHill);
+                }
+            }
+        }
+        int sum = 0;
+
+        foreach (var l in AttackToReturn)
+        {
+            sum += l.Count();
+        }
+
+        Debug.Log("Valid Hexes Found to attack: " + sum.ToString());
+
+        // Add Hex to list of hexes accessed this turn to enable reset on turns end
+        if (HexesThisTurn.Contains(h) == false)
+            HexesThisTurn.Add(h);
+
+        return AttackToReturn;
     }
 
+    // Call this on all hexes to see if it should be added to the Attack List array
+    void AnalyzeHexToAttack(Hex c, Hex h, int num, bool onHill)
+    {
+        Hex neighbor;
+        List<Hex> validNeighbors = new List<Hex>();
+
+        // Check how many neighbors, closer radially to center, are in previous ring
+        for (int i = 0; i < 6; i++)
+        {
+            neighbor = GetHexNeighbor(h, i);
+
+            if (neighbor == null)
+                continue;
+
+            if (Hex.Distance(neighbor, c) > num)
+                continue;
+
+            // Only want hexes on previous, smaller ring
+            if (AttackToReturn[num - 1].Contains(HexToGameObject[neighbor].GetComponent<HexComponent>()))
+            {
+                validNeighbors.Add(neighbor);
+            }
+        }
+
+
+        // Odd rings require 2 neighbors, Even rings require 1 neighbor
+        if (((num % 2 == 1 && validNeighbors.Count < 2) || 
+             (num % 2 == 0 && validNeighbors.Count < 1)) &&
+            ((c.Q == h.Q ||c.R == h.R ||c.S == h.S) && validNeighbors.Count != 1))
+            return;
+
+        // If on Hill, can shoot anywhere, if not, can only shoot nearest hill
+        //if (onHill == true || CheckHills(validNeighbors, num) == true)
+            //return;
+
+
+        Debug.Log("Made it through");
+        AttackToReturn[num].Add(HexToGameObject[h].GetComponent<HexComponent>());
+
+
+
+    }
+    // TODO FIX ALL OF THIS
+    // Check if hills will be in way of attack
+    bool CheckHills(List<Hex> h, int num)
+    {
+        string type = "";
+        int numHills = 0;
+
+        foreach (var item in h)
+        {
+            type = HexToGameObject[item].GetComponent<HexComponent>().GetHexType();
+            if (type.Contains("Hill") == true)
+                numHills++;
+        }
+        Debug.Log("Made it here");
+
+        // Odd rings require 2 non-hills, Even rings require 1 non hill
+        if ((num % 2 == 1 && numHills > 0) || (num % 2 == 0 && numHills > h.Count-1))
+            return false;
+
+        return true;
+    }
 
     // Function to take Token gameObject from armyManager and place it on hex
     public void PlaceTokenOnHex(GameObject token, int q, int r)
@@ -556,6 +671,7 @@ public class HexMap : MonoBehaviour {
 
     Hex GetHexNeighbor(Hex h, int dir)
     {
+
         Hex result = null;
 
         switch (dir)
@@ -617,7 +733,8 @@ public class HexMap : MonoBehaviour {
         // Go in direction 4 to make finding ring easier
         for (int i = 0; i < radius; i++)
         {
-            toAdd = GetHexNeighbor(toAdd, 4);
+            if (toAdd != null)
+                toAdd = GetHexNeighbor(toAdd, 4);
         }
 
         // Loop through every direction for radius numbers of neighbors
@@ -625,8 +742,11 @@ public class HexMap : MonoBehaviour {
         {
             for (int j = 0; j < radius; j++)
             {
-                toAdd = GetHexNeighbor(toAdd, i);
-                hexRing.Add(toAdd);
+                if (toAdd != null)
+                {
+                    toAdd = GetHexNeighbor(toAdd, i);
+                    hexRing.Add(toAdd);
+                }
             }
         }
 
@@ -647,4 +767,18 @@ public class HexMap : MonoBehaviour {
 
     }
 
+    public void ChangeStates(int i)
+    {
+        CurrentState = i;
+
+        // Check current hexgo
+        if (CurrentHexGO != null)
+            CurrentHexGO.UpdateCurrentState(CurrentState);
+    }
+
+
+    public void SetCurrentHexGO(HexComponent h)
+    {
+        CurrentHexGO = h;
+    }
 }
