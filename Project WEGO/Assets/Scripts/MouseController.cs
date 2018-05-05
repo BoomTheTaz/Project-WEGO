@@ -13,12 +13,16 @@ public class MouseController : MonoBehaviour {
 
     delegate void OnUpdate();
     OnUpdate onUpdate;
+    HexMap hexMap;
 
 	private void Start()
 	{
         armyManager = FindObjectOfType<ArmyManager>();
         onUpdate = SettingUp;
         CurrentState = (int)States.Moving;
+        hexMap = FindObjectOfType<HexMap>();
+
+        hexMap.ChangeStates(CurrentState);
 	}
 
 	// Update is called once per frame
@@ -160,6 +164,26 @@ public class MouseController : MonoBehaviour {
             }
 
 
+        }
+
+        // Temporary Attacking mode button
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            if(CurrentState != (int)States.Attacking)
+            {
+                CurrentState = (int)States.Attacking;
+                hexMap.ChangeStates(CurrentState);
+            }
+        }
+
+        // Temporary Moving mode button
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            if (CurrentState != (int)States.Moving)
+            {
+                CurrentState = (int)States.Moving;
+                hexMap.ChangeStates(CurrentState);
+            }
         }
     }
 

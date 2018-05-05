@@ -531,6 +531,7 @@ public class HexMap : MonoBehaviour {
         if (h.GetElevation() > 0.2)
             OnHill = true;
 
+
         List<Hex> rings;
         Hex test = null;
 
@@ -561,8 +562,10 @@ public class HexMap : MonoBehaviour {
             // Check Hex ring and send hexes to be analyzed
             else
             {
+                // Get Next ring of hexes
                 rings = GetHexRing(center, i + 1);
 
+                // Analyze each hex for if it is able to be attacked
                 foreach (var item in rings)
                 {
                     if (item != null)
@@ -577,11 +580,30 @@ public class HexMap : MonoBehaviour {
             sum += l.Count();
         }
 
-        Debug.Log("Valid Hexes Found to attack: " + sum.ToString());
 
         // Add Hex to list of hexes accessed this turn to enable reset on turns end
         if (HexesThisTurn.Contains(h) == false)
             HexesThisTurn.Add(h);
+
+        List<HexComponent> toRemove = new List<HexComponent>();
+
+        // Go through and remove ponds
+        for (int i = 0; i < MaxRange; i++)
+        {
+            foreach (var item in AttackToReturn[i])
+            {
+                if (item.GetHexType() == "Pond")
+                    toRemove.Add(item);
+            }
+
+            foreach (var item in toRemove)
+            {
+                AttackToReturn[i].Remove(item);
+            }
+            toRemove.Clear();
+        }
+
+
 
         return AttackToReturn;
     }
@@ -591,6 +613,7 @@ public class HexMap : MonoBehaviour {
     {
         Hex neighbor;
         List<Hex> validNeighbors = new List<Hex>();
+        List<Hex> InvalidNeighbors = new List<Hex>();
 
         // Check how many neighbors, closer radially to center, are in previous ring
         for (int i = 0; i < 6; i++)
@@ -608,28 +631,60 @@ public class HexMap : MonoBehaviour {
             {
                 validNeighbors.Add(neighbor);
             }
+            else
+                InvalidNeighbors.Add(neighbor);
+                
+
         }
 
-        //Debug.Log("Valid Neighbors: " + validNeighbors.Count.ToString());
 
-        // TODO ASAP Code the attack analysis
-        // Odd rings require 2 neighbors, Even rings require 1 neighbor
+        bool AdjacentBoulder = false;
+        foreach (var item in InvalidNeighbors)
+        {
+            if (HexToGameObject[item].GetComponent<HexComponent>().GetHexType() == "Boulder" &&
+                (item.Q == c.Q || item.R == c.R || item.S == c.S))
+                AdjacentBoulder = true;
+        }
 
-        //if (((num % 2 == 0 && validNeighbors.Count < 2) ||     // Odd Rings
-            // (num % 2 == 1 && validNeighbors.Count < 1)) &&    // Even Rings
-            //((c.Q == h.Q ||c.R == h.R ||c.S == h.S) && validNeighbors.Count < 1)) // If Same Q/R/S, only need one neighbor
-            //return;
+        // ==== CONDITIONS FOR ANALYSIS =====
 
-        // If on Hill, can shoot anywhere, if not, can only shoot nearest hill
-        //if (onHill == true || CheckHills(validNeighbors, num) == true)
-            //return;
+        // REJECT, if Boulder
+        if (HexToGameObject[h].GetComponent<HexComponent>().GetHexType() == "Boulder")
+            return;
+
+        // ACCEPT, if on a grid line and have a valid neighbors
+        if ((c.Q == h.Q || c.R == h.R || c.S == h.S) && validNeighbors.Count == 1)
+        {
+            AttackToReturn[num].Add(HexToGameObject[h].GetComponent<HexComponent>());
+            return;
+        }
+
+        // ACCEPT, If on odd ring and one valid neighbor and other is boulder
+        if (num % 2 == 0 && validNeighbors.Count == 1 && AdjacentBoulder == true)
+        {
+            AttackToReturn[num].Add(HexToGameObject[h].GetComponent<HexComponent>());
+            return;
+        }
+
+        // REJECT, if on an even ring and no valid neighbors
+        if(num % 2 == 1 && validNeighbors.Count<1)
+        {
+            Debug.Log("On even ring and no valid neighbors");
+            return;
+        }
+
+        // REJECT, if on an odd ring with 1 or fewer valid neighbors
+        if (num % 2 == 0 && validNeighbors.Count < 2)
+        {
+            Debug.Log("On odd ring and " + validNeighbors.Count.ToString() + " valid neighbors");
+            return;
+        }
 
 
         AttackToReturn[num].Add(HexToGameObject[h].GetComponent<HexComponent>());
-
-
-
     }
+
+
     // TODO FIX ALL OF THIS
     // Check if hills will be in way of attack
     bool CheckHills(List<Hex> h, int num)

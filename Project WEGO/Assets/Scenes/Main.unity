@@ -151,6 +151,7 @@ MonoBehaviour:
   Flatland: {fileID: 0}
   Hill0: {fileID: 4300000, guid: 4c13c1f3ac43d4c98bd84395b7654483, type: 3}
   BoulderMesh: {fileID: 4300002, guid: 8b166608b30714bf389e189d1d6199cf, type: 3}
+  CurrentState: 0
   InnerTreePrefab: {fileID: 1719536436161290, guid: 85ddbfa29193b4fe6a7f607b5504ffe7,
     type: 2}
   OuterTreePrefab: {fileID: 1896435038653208, guid: 4913a65b151494d8fa5e10322c49ec6f,
@@ -499,7 +500,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 20
+  field of view: 28
   orthographic: 0
   orthographic size: 3
   m_Depth: -1
