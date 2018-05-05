@@ -197,13 +197,21 @@ public class HexComponent : MonoBehaviour
             }
 
 
-            ValidAttackHexes = hexMap.GetValidAttackHexes(this);
+            temp = hexMap.GetValidAttackHexes(this);
+
+            for(int l = 0; l < maxRange; l++)
+            {
+                foreach (var i in temp[l])
+                {
+                    ValidAttackHexes[l].Add(i);
+                }
+            }
 
             SelectedThisTurn = true;
         }
 
         SelectAllTokens();
-        IsSelected = true;
+
 
 
         if (ValidMoveHexes == null)
@@ -212,7 +220,7 @@ public class HexComponent : MonoBehaviour
         allowTokensToUpdateValidHexes = true;
         UpdateMinValues();
         DrawOutlines();
-
+        IsSelected = true;
         currentState = (int)States.Moving;
 
 
@@ -388,7 +396,7 @@ public class HexComponent : MonoBehaviour
         }
 
         // If minMovement has changed, update the outlines
-        if (prevMinMovement != minMovement  && currentState == (int)States.Moving)
+        if (prevMinMovement != minMovement  && currentState == (int)States.Moving && IsSelected == true)
         {
             UpdateOutlines();
         }
@@ -402,7 +410,7 @@ public class HexComponent : MonoBehaviour
         {
             //case (int)States.Moving:
                 //for (int i = 0; i < minMovement; i++)
-                //{
+                //ddddd{
                 //    foreach (var item in ValidMoveHexes[i])
                 //    {
                 //        OutlineAppropriately(item);
@@ -482,7 +490,15 @@ public class HexComponent : MonoBehaviour
     // TODO: Maybe compare with new outline to prevent over calling outliner.SetActive
     void UnoutlineValidHexes()
     {
-        foreach (var l in ValidMoveHexes)
+        //foreach (var l in ValidMoveHexes)
+        //{
+        //    foreach (var i in l)
+        //    {
+        //        i.NoOutline();
+        //    }
+        //}
+
+        foreach (var l in ValidAttackHexes)
         {
             foreach (var i in l)
             {

@@ -328,7 +328,7 @@ public class HexMap : MonoBehaviour {
     public Hex GetHexAt(int q, int r)
     {
         
-        if (Hexes.ContainsKey(QRtoKey(q,r)) == false || q < 0)
+        if (q < 0 || q >= MapTileWidth || Hexes.ContainsKey(QRtoKey(q,r)) == false)
         {
             //Debug.Log("Cannot find Hex at (" + q.ToString() + "," + r.ToString() + ")");
             return null;
@@ -561,7 +561,6 @@ public class HexMap : MonoBehaviour {
             // Check Hex ring and send hexes to be analyzed
             else
             {
-                Debug.Log("Checkpoint");
                 rings = GetHexRing(center, i + 1);
 
                 foreach (var item in rings)
@@ -611,19 +610,21 @@ public class HexMap : MonoBehaviour {
             }
         }
 
+        //Debug.Log("Valid Neighbors: " + validNeighbors.Count.ToString());
 
+        // TODO ASAP Code the attack analysis
         // Odd rings require 2 neighbors, Even rings require 1 neighbor
-        if (((num % 2 == 1 && validNeighbors.Count < 2) || 
-             (num % 2 == 0 && validNeighbors.Count < 1)) &&
-            ((c.Q == h.Q ||c.R == h.R ||c.S == h.S) && validNeighbors.Count != 1))
-            return;
+
+        //if (((num % 2 == 0 && validNeighbors.Count < 2) ||     // Odd Rings
+            // (num % 2 == 1 && validNeighbors.Count < 1)) &&    // Even Rings
+            //((c.Q == h.Q ||c.R == h.R ||c.S == h.S) && validNeighbors.Count < 1)) // If Same Q/R/S, only need one neighbor
+            //return;
 
         // If on Hill, can shoot anywhere, if not, can only shoot nearest hill
         //if (onHill == true || CheckHills(validNeighbors, num) == true)
             //return;
 
 
-        Debug.Log("Made it through");
         AttackToReturn[num].Add(HexToGameObject[h].GetComponent<HexComponent>());
 
 
@@ -731,20 +732,58 @@ public class HexMap : MonoBehaviour {
         Hex toAdd = center;
 
         // Go in direction 4 to make finding ring easier
-        for (int i = 0; i < radius; i++)
-        {
-            if (toAdd != null)
-                toAdd = GetHexNeighbor(toAdd, 4);
-        }
+        int testQ = center.Q - radius;
+        int testR = center.R;
 
         // Loop through every direction for radius numbers of neighbors
         for (int i = 0; i < 6; i++)
         {
+            // Update q and r depending on direction going
+            // storing q and r because neighbors returns null and breaks ring
+
             for (int j = 0; j < radius; j++)
             {
+                switch (i)
+                {
+                    case 0:
+                        testQ += 0;
+                        testR += 1;
+                        break;
+
+                    case 1:
+                        testQ += 1;
+                        testR += 0;
+                        break;
+
+                    case 2:
+                        testQ += 1;
+                        testR += -1;
+                        break;
+
+                    case 3:
+                        testQ += 0;
+                        testR += -1;
+                        break;
+
+                    case 4:
+                        testQ += -1;
+                        testR += 0;
+                        break;
+
+                    case 5:
+                        testQ += -1;
+                        testR += 1;
+                        break;
+
+                    default:
+                        Debug.Log("How did we get here....");
+                        break;
+                }
+
+                toAdd = GetHexAt(testQ, testR);
+
                 if (toAdd != null)
                 {
-                    toAdd = GetHexNeighbor(toAdd, i);
                     hexRing.Add(toAdd);
                 }
             }

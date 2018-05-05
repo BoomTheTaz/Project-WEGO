@@ -33,7 +33,8 @@ public class ArmyManager : MonoBehaviour {
 	}
 
 
-    string[] types = { "Melee", "Ranged", "Cavalry" };
+    //string[] types = { "Melee", "Ranged", "Cavalry" };
+    string[] types = {"Ranged"};
 
     void CreateArmy()
     {
