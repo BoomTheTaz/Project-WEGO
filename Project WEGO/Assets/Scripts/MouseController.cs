@@ -6,7 +6,7 @@ public enum States { Moving, Attacking, Defending };
 
 public class MouseController : MonoBehaviour {
 
-    ArmyManager armyManager;
+    WarManager warManager;
     HexComponent currentHexGO;
     Token[] currentTokens;
     int CurrentState;
@@ -14,13 +14,15 @@ public class MouseController : MonoBehaviour {
     delegate void OnUpdate();
     OnUpdate onUpdate;
     HexMap hexMap;
-
+    
 	private void Start()
 	{
-        armyManager = FindObjectOfType<ArmyManager>();
+        warManager = FindObjectOfType<WarManager>();
         onUpdate = SettingUp;
         CurrentState = (int)States.Moving;
         hexMap = FindObjectOfType<HexMap>();
+
+		currentTokens = new Token[7];
 
         hexMap.ChangeStates(CurrentState);
 	}
@@ -48,12 +50,44 @@ public class MouseController : MonoBehaviour {
                 {
                     currentHexGO = hit.transform.GetComponentInParent<HexComponent>();
 
-                    //Hex h = currentHexGO.GetHex();
+					if (currentHexGO.ValidStarting0 == true)
+					{
+						bool usedToken = currentHexGO.AddToken(warManager.GetToken(0));
 
-                    bool usedToken = currentHexGO.AddToken(armyManager.GetToken());
+
+						warManager.UsedToken(0, usedToken);
+					}
+
+                    else
+						Debug.Log("Invalid starting spot for first player.");
+                }
 
 
-                    armyManager.UsedToken(usedToken);
+            }
+
+        }
+
+		if (Input.GetMouseButtonDown(1))
+        {
+            RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+
+            if (Physics.Raycast(ray, out hit, 100))
+            {
+                if (hit.transform.gameObject.layer == LayerMask.NameToLayer("HexTile"))
+                {
+                    currentHexGO = hit.transform.GetComponentInParent<HexComponent>();
+
+					if (currentHexGO.ValidStarting1 == true)
+					{
+						bool usedToken = currentHexGO.AddToken(warManager.GetToken(1));
+
+
+						warManager.UsedToken(1, usedToken);
+					}
+					else
+						Debug.Log("Invalid starting spot for second player.");
                 }
 
 
@@ -106,7 +140,6 @@ public class MouseController : MonoBehaviour {
                             }
                         }
 
-
                         // Get HexComponent and associated Hex
                         currentHexGO = hit.transform.GetComponentInParent<HexComponent>();
 
@@ -127,7 +160,7 @@ public class MouseController : MonoBehaviour {
                 // Check if we hit an active token
                 if (hit.transform.gameObject.layer == LayerMask.NameToLayer("Token"))
                 {
-
+                   
                     hit.transform.GetComponent<Token>().ToggleSelect();
 
 

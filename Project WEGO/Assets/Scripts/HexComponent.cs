@@ -35,10 +35,12 @@ public class HexComponent : MonoBehaviour
     int prevMinAttack;
 
     bool allowTokensToUpdateValidHexes = false;
-
+    
     public bool IsSelected;
+	public bool ValidStarting0 = false;
+	public bool ValidStarting1 = false;
     bool SelectedThisTurn = false;
-
+    
     Token[] Tokens = new Token[7];
 
     HexStats hexStats;
@@ -252,7 +254,6 @@ public class HexComponent : MonoBehaviour
 
     public void SelectAllTokens()
     {
-        
         foreach (var t in Tokens)
         {
             if (t != null)
@@ -691,4 +692,25 @@ public class HexComponent : MonoBehaviour
         // Draw relevant hexes for current state
         DrawOutlines();
     }
+    
+	public void SetValidStarting(int player)
+	{
+        switch (player)
+		{
+			case 0:
+				ValidStarting0 = true;
+				break;
+
+			case 1:
+				ValidStarting1 = true;
+				break;
+
+			default:
+				break;
+		}
+
+		OutlineWhite();
+
+	}
+
 }

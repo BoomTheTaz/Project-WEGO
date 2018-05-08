@@ -5,7 +5,8 @@ using UnityEngine;
 public class Token : MonoBehaviour
 {
     // Customizing Options
-    public SpriteRenderer spriteRenderer;
+    public SpriteRenderer LeftSprite;
+    public SpriteRenderer RightSprite;
     public Material MainMaterial;
     public Material AccentMaterial;
     public GameObject Outliner;
@@ -43,43 +44,27 @@ public class Token : MonoBehaviour
         coll.enabled = false;
     }
 
-    // Only called first time, sets material colors and sprite
-    public void SetUp(Color main, Color accent, string type, WarManager w)
-    {
-        // Set Sprite
-        spriteRenderer.color = accent;
-        spriteRenderer.sprite = Resources.Load<Sprite>(type);
 
-        // Set Material Colors
+	public virtual void SetColors(Color main, Color accent)
+    {
         MainMaterial.color = main;
         AccentMaterial.color = accent;
 
-        Outliner.GetComponent<MeshRenderer>().material.color = new Color (Random.Range(0,256),Random.Range(0, 256),Random.Range(0, 256));
-
-        // Store WarManager
-        warManager = w;
-
-
-        unitStats = UnitStatsTemplate.GetStatsForUnit(type);
+        LeftSprite.color = accent;
+        RightSprite.color = accent;
 
     }
 
-
-    // Function for when material has already been set,
-    // Only necessary to change sprite renderer color and set sprite
-    public void SetUp(Color accent, string type, WarManager w)
+    // Only called first time, sets material colors and sprite
+    public void SetUp(string type, WarManager w)
     {
-        // Set Sprite
-        spriteRenderer.color = accent;
-        spriteRenderer.sprite = Resources.Load<Sprite>(type);
-
-        //Outliner.GetComponent<MeshRenderer>().material.color = new Color(Random.Range(0, 256), Random.Range(0, 256), Random.Range(0, 256));
-
-
-        unitStats = UnitStatsTemplate.GetStatsForUnit(type);
+        LeftSprite.sprite = Resources.Load<Sprite>(type + "_L");
+        RightSprite.sprite = Resources.Load<Sprite>(type + "_R");
 
         // Store WarManager
         warManager = w;
+
+        unitStats = UnitStatsTemplate.GetStatsForUnit(type);
     }
 
     // Activate the colliders when hex is selected

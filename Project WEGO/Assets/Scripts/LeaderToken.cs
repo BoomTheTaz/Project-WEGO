@@ -10,5 +10,10 @@ public class LeaderToken : Token {
         return;
 	}
 
+	public override void SetColors(Color main, Color accent)
+	{
+		LeftSprite.color = accent;
+		RightSprite.color = accent;
+	}
 
 }

@@ -4,7 +4,18 @@ using UnityEngine;
 
 
 // Use this class to manage the various war states
-public class WarManager : MonoBehaviour {
+public class WarManager : MonoBehaviour
+{
+
+    public Color MainColor1;
+    public Color AccentColor1;
+    public Color MainColor2;
+    public Color AccentColor2;
+
+    public GameObject ArmyTokenPrefab1;
+    public GameObject ArmyTokenPrefab2;
+    public GameObject LeaderTokenPrefab1;
+    public GameObject LeaderTokenPrefab2;
 
     public bool IsSettingUp = true;
     MouseController mouse;
@@ -23,6 +34,20 @@ public class WarManager : MonoBehaviour {
     Transform Target;
     GameObject[] ToMove;
 
+	bool OneArmyDone = false;
+
+    string[] ArmyUnits1 = { 
+        "Melee", "Melee","Melee","Melee",
+        "Ranged", "Ranged", "Ranged", 
+        "Cavalry", "Cavalry", "Cavalry"};
+
+    string[] ArmyUnits2 = {
+        "Melee", "Melee","Melee","Melee",
+        "Ranged", "Ranged", "Ranged", "Ranged",
+        "Cavalry", "Cavalry"};
+
+
+    ArmyManager[] Armies = new ArmyManager[2];
 
 	// Use this for initialization
 	void Start () {
@@ -32,8 +57,49 @@ public class WarManager : MonoBehaviour {
         hexMap = FindObjectOfType<HexMap>();
 
         UI.InSetup();
-
+        SetupArmies();
 	}
+
+
+
+
+    void SetupArmies()
+    {
+        // Change Material colors
+        ArmyTokenPrefab1.GetComponent<Token>().SetColors(MainColor1, AccentColor1);
+        ArmyTokenPrefab2.GetComponent<Token>().SetColors(MainColor2, AccentColor2);
+		LeaderTokenPrefab1.GetComponent<LeaderToken>().SetColors(MainColor1, AccentColor1);
+		LeaderTokenPrefab2.GetComponent<LeaderToken>().SetColors(MainColor2, AccentColor2);
+
+        Token temp;
+		Armies[0] = new ArmyManager(0, ArmyUnits1.Length,this);
+        foreach (var a in ArmyUnits1)
+        {
+			temp = Instantiate(ArmyTokenPrefab1, transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
+            temp.SetUp(a, this);
+            
+            Armies[0].AddTokenToArmy(temp);
+        }
+
+        // Set army 1 leader token
+		temp = Instantiate(LeaderTokenPrefab1,transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
+		temp.SetUp("Leader", this);
+		Armies[0].SetLeader(temp.GetComponent<LeaderToken>());
+
+		Armies[1] = new ArmyManager(1, ArmyUnits2.Length,this);
+        foreach (var a in ArmyUnits2)
+        {
+            temp = Instantiate(ArmyTokenPrefab2, transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
+            temp.SetUp(a, this);
+
+            Armies[1].AddTokenToArmy(temp);
+        }
+
+		temp = Instantiate(LeaderTokenPrefab2, transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
+        temp.SetUp("Leader", this);
+        Armies[1].SetLeader(temp.GetComponent<LeaderToken>());
+
+    }
 	
     // Update is called once per frame
 	void Update () {
@@ -56,7 +122,14 @@ public class WarManager : MonoBehaviour {
     // Call after setup complete, ensures that everything knows setup is done
     public void FinishedSettingUp()
     {
+		if (OneArmyDone == false)
+		{
+			OneArmyDone = true;
+			return;
+		}
+
         IsSettingUp = false;
+		hexMap.ClearStartingHexes();
         mouse.ToGameplay();
         UI.LeavingSetup();
         Debug.Log("Setup is complete!");
@@ -117,5 +190,15 @@ public class WarManager : MonoBehaviour {
         }
     }
 
+	public GameObject GetToken(int player)
+	{
+		return Armies[player].GetToken();
+	}
+
+
+    public void UsedToken (int player, bool b)
+	{
+		Armies[player].UsedToken(b);
+	}
 
 }

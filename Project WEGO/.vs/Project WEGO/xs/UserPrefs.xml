@@ -1,11 +1,14 @@
 ﻿<Properties StartupConfiguration="{42F83539-DD86-A017-DF70-4193BFE4CD8D}|">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/HexMap.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/WarManager.cs">
     <Files>
-      <File FileName="Assets/Scripts/HexComponent.cs" Line="429" Column="52" />
-      <File FileName="Assets/Scripts/HexMap.cs" Line="581" Column="10" />
-      <File FileName="Assets/Scripts/MouseController.cs" Line="97" Column="41" />
+      <File FileName="Assets/Scripts/HexComponent.cs" Line="709" Column="11" />
+      <File FileName="Assets/Scripts/HexMap.cs" Line="897" Column="46" />
+      <File FileName="Assets/Scripts/MouseController.cs" Line="64" Column="5" />
       <File FileName="Assets/Scripts/Hex.cs" Line="41" Column="16" />
-      <File FileName="Assets/Scripts/Token.cs" Line="102" Column="28" />
+      <File FileName="Assets/Scripts/Token.cs" Line="48" Column="16" />
+      <File FileName="Assets/Scripts/WarManager.cs" Line="121" Column="2" />
+      <File FileName="Assets/Scripts/ArmyManager.cs" Line="68" Column="16" />
+      <File FileName="Assets/Scripts/LeaderToken.cs" Line="16" Column="30" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />

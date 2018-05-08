@@ -41,12 +41,18 @@ public class HexMap : MonoBehaviour {
 
     HexComponent CurrentHexGO;
 
+	List<HexComponent>[] ValidStartingHexes = new List<HexComponent>[2];
+
 	// Use this for initialization
 	void Start () {
-        MapTileWidth = 12;
-        MapTileHeight = 20;
-        GenerateMap();
+        MapTileWidth = 11;
+        MapTileHeight = 15;
 
+		ValidStartingHexes[0] = new List<HexComponent>();
+		ValidStartingHexes[1] = new List<HexComponent>();
+
+        GenerateMap();
+        
         for (int i = 0; i < MaxRange; i++)
         {
             MoveToReturn[i] = new List<HexComponent>();
@@ -55,51 +61,58 @@ public class HexMap : MonoBehaviour {
     }
 
 
-	private void Update()
-	{
-        
-	}
-
-
     // Generic map generation with hard coded map dimensions
 	void GenerateMap()
     {
 
-        // Cycle through each (row,column) combination
-        // Building up one row at a time to make it easier to terminate a row early
-        // or cut off start of row
-        for (int row = -MapTileWidth/2; row < MapTileHeight; row++)
-        {
-            for (int column = 0; column < MapTileWidth; column++)
-            {
-                // Square off bottom right corner
-                if (row < 0 && column / 2 + row < 0)
-                    continue;
+		// Cycle through each (row,column) combination
+		// Building up one row at a time to make it easier to terminate a row early
+		// or cut off start of row
+		for (int row = -MapTileWidth / 2; row < MapTileHeight; row++)
+		{
+			for (int column = 0; column < MapTileWidth; column++)
+			{
+				// Square off bottom right corner
+				if (column / 2 + row < 0)
+					continue;
 
-                // Check if full row is needed, i.e. square off the top
-                if (row + Mathf.Ceil(column / 2f) > MapTileHeight - 1)
-                    break;
+				// Check if full row is needed, i.e. square off the top
+				if (row + Mathf.Ceil(column / 2f) > MapTileHeight - 1)
+					break;
 
-                // Create new Hex data object with row and column
-                Hex h = new Hex(column, row);
+				// Create new Hex data object with row and column
+				Hex h = new Hex(column, row);
 
-                // Instantiate a hex prefab at the hex data's indicated position
-                HexGO = Instantiate(HexPrefab, h.Position(), Quaternion.identity, this.transform);
+				// Instantiate a hex prefab at the hex data's indicated position
+				HexGO = Instantiate(HexPrefab, h.Position(), Quaternion.identity, this.transform);
 
-                // Pass self as HexMap
-                HexGO.GetComponent<HexComponent>().SetHexMap(this);
+				// Pass self as HexMap
+				HexGO.GetComponent<HexComponent>().SetHexMap(this);
 
-                // Give the hex prefab a copy of the hex data
-                HexGO.GetComponent<HexComponent>().SetHex(h);
+				// Give the hex prefab a copy of the hex data
+				HexGO.GetComponent<HexComponent>().SetHex(h);
 
-                // Store new hex in Hexes Dictionary, using "column" + "row"
-                Hexes.Add(QRtoKey(column,row), h);
+				// Store new hex in Hexes Dictionary, using "column" + "row"
+				Hexes.Add(QRtoKey(column, row), h);
 
-                // Store Hex GameObject in dictionary with key Hex
-                HexToGameObject.Add(h, HexGO);
+				// Store Hex GameObject in dictionary with key Hex
+				HexToGameObject.Add(h, HexGO);
 
-                // Prevent moving of the hex
-                HexGO.isStatic = true;
+				// Prevent moving of the hex
+				HexGO.isStatic = true;
+
+				// Store Valid starting hexes, i.e. 3 Hexes from top and bottom edges
+				if (row + column / 2f < 1.5)
+				{
+					HexGO.GetComponent<HexComponent>().SetValidStarting(0);
+					ValidStartingHexes[0].Add(HexGO.GetComponent<HexComponent>());
+				}
+
+				if (row + column / 2f > MapTileHeight - 2.5)
+				{
+					HexGO.GetComponent<HexComponent>().SetValidStarting(1);
+					ValidStartingHexes[1].Add(HexGO.GetComponent<HexComponent>());
+				}
 
                 // Obtain Width of map on last column
                 if (MapActualWidth <= 0 && column == MapTileWidth - 1)
@@ -669,14 +682,12 @@ public class HexMap : MonoBehaviour {
         // REJECT, if on an even ring and no valid neighbors
         if(num % 2 == 1 && validNeighbors.Count<1)
         {
-            Debug.Log("On even ring and no valid neighbors");
             return;
         }
 
         // REJECT, if on an odd ring with 1 or fewer valid neighbors
         if (num % 2 == 0 && validNeighbors.Count < 2)
         {
-            Debug.Log("On odd ring and " + validNeighbors.Count.ToString() + " valid neighbors");
             return;
         }
 
@@ -875,4 +886,19 @@ public class HexMap : MonoBehaviour {
     {
         CurrentHexGO = h;
     }
+
+    public void ClearStartingHexes()
+	{
+		foreach (var item in ValidStartingHexes[0])
+		{
+			item.NoOutline();
+		}
+
+		foreach (var item in ValidStartingHexes[1])
+        {
+            item.NoOutline();
+        }
+
+		//ValidStartingHexes = null;
+	}
 }
