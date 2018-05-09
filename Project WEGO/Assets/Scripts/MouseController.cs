@@ -67,33 +67,35 @@ public class MouseController : MonoBehaviour {
 
         }
 
-		if (Input.GetMouseButtonDown(1))
-        {
-            RaycastHit hit;
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        //======  MANUAL CONTROL OF SECOND ARMY =======
+
+		//if (Input.GetMouseButtonDown(1))
+     //   {
+     //       RaycastHit hit;
+     //       Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
 
-            if (Physics.Raycast(ray, out hit, 100))
-            {
-                if (hit.transform.gameObject.layer == LayerMask.NameToLayer("HexTile"))
-                {
-                    currentHexGO = hit.transform.GetComponentInParent<HexComponent>();
+     //       if (Physics.Raycast(ray, out hit, 100))
+     //       {
+     //           if (hit.transform.gameObject.layer == LayerMask.NameToLayer("HexTile"))
+     //           {
+     //               currentHexGO = hit.transform.GetComponentInParent<HexComponent>();
 
-					if (currentHexGO.ValidStarting1 == true)
-					{
-						bool usedToken = currentHexGO.AddToken(warManager.GetToken(1));
-
-
-						warManager.UsedToken(1, usedToken);
-					}
-					else
-						Debug.Log("Invalid starting spot for second player.");
-                }
+					//if (currentHexGO.ValidStarting1 == true)
+					//{
+					//	bool usedToken = currentHexGO.AddToken(warManager.GetToken(1));
 
 
-            }
+					//	warManager.UsedToken(1, usedToken);
+					//}
+					//else
+						//Debug.Log("Invalid starting spot for second player.");
+        //        }
 
-        }
+
+        //    }
+
+        //}
     }
 
 

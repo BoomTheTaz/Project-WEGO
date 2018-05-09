@@ -7,8 +7,8 @@ public class HexMap : MonoBehaviour {
 
 
     public GameObject HexPrefab;
-    int MapTileWidth;
-    int MapTileHeight;
+    public static int MapTileWidth = 11;
+    public static int MapTileHeight = 15;
 
     float xPos;
     float zPos;
@@ -125,6 +125,7 @@ public class HexMap : MonoBehaviour {
         }
         AddTopography(7,7);
         UpdateVisuals();
+		FilterStartingHexes();
     }
 
     // Test function to add features to the map
@@ -317,9 +318,41 @@ public class HexMap : MonoBehaviour {
             }
 
             hexGO.GetComponent<HexComponent>().SetHexAsType(s);
-                
+            
         }
     }
+
+    void FilterStartingHexes()
+	{
+		List<HexComponent> toRemove = new List<HexComponent>();
+		string t = "";
+        for (int i = 0; i < 2; i++)
+		{
+			// Check if any boulder or ponds in starting hexes, register for removal
+			foreach (var item in ValidStartingHexes[i])
+            {
+                t = item.GetHexType();
+				if (t == "Boulder" || t == "Pond")
+				{
+					toRemove.Add(item);
+				}
+    
+            }
+
+            // Remove all invalid starting hexes
+			foreach (var item in toRemove)
+			{
+				item.NoOutline();
+				ValidStartingHexes[i].Remove(item);
+			}
+
+            // reset removal list
+			toRemove.Clear();
+		}
+
+
+
+	}
 
     public float GetMapWidth()
     {
@@ -736,7 +769,7 @@ public class HexMap : MonoBehaviour {
     // 4: SW
     // 5: NW
 
-    Hex GetHexNeighbor(Hex h, int dir)
+    public Hex GetHexNeighbor(Hex h, int dir)
     {
 
         Hex result = null;
@@ -900,5 +933,15 @@ public class HexMap : MonoBehaviour {
         }
 
 		//ValidStartingHexes = null;
+	}
+
+	public HexComponent[] GetStartingHexes(int id)
+	{
+		return ValidStartingHexes[id].ToArray();
+	}
+
+	public HexComponent GetHexComponentFromHex(Hex h)
+	{
+		return HexToGameObject[h].GetComponent<HexComponent>();
 	}
 }

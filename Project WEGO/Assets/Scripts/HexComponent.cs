@@ -345,6 +345,8 @@ public class HexComponent : MonoBehaviour
 
         SetTokenHeight(hexStats.TokenHeight);
 
+		hex.SetHexType(s);
+
     }
 
     // Tokens will call this when they are selected/deselected
@@ -711,6 +713,11 @@ public class HexComponent : MonoBehaviour
 
 		OutlineWhite();
 
+	}
+
+    public float GetEffectiveRow()
+	{
+		return hex.Q / 2f + hex.R;
 	}
 
 }

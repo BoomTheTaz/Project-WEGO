@@ -24,6 +24,8 @@ public class Hex {
     float Elevation;
     float Moisture;
 
+	string HexType;
+
     public Vector3 Position()
     {
         // x posiiton is column times 3/4 width
@@ -66,4 +68,14 @@ public class Hex {
     {
         return Moisture;
     }
+
+    public void SetHexType(string s)
+	{
+		HexType = s;
+	}
+
+    public string GetHexType()
+	{
+		return HexType;
+	}
 }

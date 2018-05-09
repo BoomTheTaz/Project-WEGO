@@ -36,13 +36,23 @@ public class WarManager : MonoBehaviour
 
 	bool OneArmyDone = false;
 
+	bool[] IsAI = { true, true };
+
     string[] ArmyUnits1 = { 
         "Melee", "Melee","Melee","Melee",
         "Ranged", "Ranged", "Ranged", 
+		"Cavalry", "Cavalry", "Cavalry","Melee", "Melee","Melee","Melee",
+        "Ranged", "Ranged", "Ranged",
+		"Cavalry", "Cavalry", "Cavalry","Melee", "Melee","Melee","Melee",
+        "Ranged", "Ranged", "Ranged",
         "Cavalry", "Cavalry", "Cavalry"};
 
     string[] ArmyUnits2 = {
         "Melee", "Melee","Melee","Melee",
+        "Ranged", "Ranged", "Ranged", "Ranged",
+		"Cavalry", "Cavalry", "Melee", "Melee","Melee","Melee",
+        "Ranged", "Ranged", "Ranged", "Ranged",
+		"Cavalry", "Cavalry", "Melee", "Melee","Melee","Melee",
         "Ranged", "Ranged", "Ranged", "Ranged",
         "Cavalry", "Cavalry"};
 
@@ -72,7 +82,12 @@ public class WarManager : MonoBehaviour
 		LeaderTokenPrefab2.GetComponent<LeaderToken>().SetColors(MainColor2, AccentColor2);
 
         Token temp;
-		Armies[0] = new ArmyManager(0, ArmyUnits1.Length,this);
+
+		if (IsAI[0] == false)
+		    Armies[0] = new ArmyManager(0, ArmyUnits1.Length,this);
+		else
+			Armies[0] = new AIArmy(0, ArmyUnits1.Length, this, hexMap);
+
         foreach (var a in ArmyUnits1)
         {
 			temp = Instantiate(ArmyTokenPrefab1, transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
@@ -86,7 +101,12 @@ public class WarManager : MonoBehaviour
 		temp.SetUp("Leader", this);
 		Armies[0].SetLeader(temp.GetComponent<LeaderToken>());
 
-		Armies[1] = new ArmyManager(1, ArmyUnits2.Length,this);
+        
+		if (IsAI[1] == false)
+			Armies[1] = new ArmyManager(1, ArmyUnits2.Length, this);
+		else
+			Armies[1] = new AIArmy(1, ArmyUnits2.Length, this, hexMap);
+		
         foreach (var a in ArmyUnits2)
         {
             temp = Instantiate(ArmyTokenPrefab2, transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
@@ -98,6 +118,15 @@ public class WarManager : MonoBehaviour
 		temp = Instantiate(LeaderTokenPrefab2, transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
         temp.SetUp("Leader", this);
         Armies[1].SetLeader(temp.GetComponent<LeaderToken>());
+
+
+
+		// Setup AI Tokens
+		if (IsAI[0] == true)
+			Armies[0].SetupTokens();
+
+		if (IsAI[1] == true)
+            Armies[1].SetupTokens();
 
     }
 	
@@ -132,6 +161,9 @@ public class WarManager : MonoBehaviour
 		hexMap.ClearStartingHexes();
         mouse.ToGameplay();
         UI.LeavingSetup();
+
+		NewAITurn();
+
         Debug.Log("Setup is complete!");
     }
 
@@ -187,6 +219,8 @@ public class WarManager : MonoBehaviour
         {
             Debug.Log("All tokens done moving");
             UpdateTokenMovement = null;
+
+			NewAITurn();
         }
     }
 
@@ -199,6 +233,15 @@ public class WarManager : MonoBehaviour
     public void UsedToken (int player, bool b)
 	{
 		Armies[player].UsedToken(b);
+	}
+
+	// Call to have the AI decide on a new turn
+    void NewAITurn()
+	{
+		if (IsAI[0] == true)
+            Armies[0].RegisterTokenActions();
+        if (IsAI[1] == true)
+            Armies[1].RegisterTokenActions();
 	}
 
 }

@@ -4,27 +4,30 @@ using UnityEngine;
 
 public class ArmyManager {
 
-    WarManager warManager;
-	Token[] Army;
-    LeaderToken Leader;
+	protected WarManager warManager;
+	protected Token[] Army;
+	protected LeaderToken Leader;
+    
+	public int playerID;
+	protected int armySize;
+	protected int TokensPlaced;
+	protected int positionTracker;
+	protected float BaseRow;
 
-	int playerID;
-    int armySize;
-	int TokensPlaced;
-	int positionTracker;
-
-    string[] types = { "Melee", "Ranged", "Cavalry" };
+	protected string[] types = { "Melee", "Ranged", "Cavalry" };
 
 
 	public ArmyManager(int id, int size, WarManager w)
 	{
 		playerID = id;
 		armySize = size;
-       
+      
 		Army = new Token[size];
 
 		warManager = w;
 
+		BaseRow = id * HexMap.MapTileHeight - id;
+                
         // Initialize
 		positionTracker = 0;
 	}
@@ -77,8 +80,16 @@ public class ArmyManager {
 
 		if (b == true)
 			positionTracker++;
-
+        
     }
     
+	public virtual void SetupTokens()
+	{
+		return;
+	}
 
+	public virtual void RegisterTokenActions()
+    {
+        return;
+    }
 }
