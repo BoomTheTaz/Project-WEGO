@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
@@ -749,16 +748,7 @@ public class HexMap : MonoBehaviour {
             return false;
 
         return true;
-    }
-
-    // Function to take Token gameObject from armyManager and place it on hex
-    public void PlaceTokenOnHex(GameObject token, int q, int r)
-    {
-        GameObject hexTemp = HexToGameObject[GetHexAt(q, r)];
-
-        hexTemp.GetComponent<HexComponent>().AddToken(token);
-    }
-
+    }   
 
     // Return Hex in given direction
     // ======== DIRECTION CODE ==========

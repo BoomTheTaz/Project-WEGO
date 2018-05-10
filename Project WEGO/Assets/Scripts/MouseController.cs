@@ -52,7 +52,7 @@ public class MouseController : MonoBehaviour {
 
 					if (currentHexGO.ValidStarting0 == true)
 					{
-						bool usedToken = currentHexGO.AddToken(warManager.GetToken(0));
+						bool usedToken = currentHexGO.AddToken(warManager.GetToken(0),0);
 
 
 						warManager.UsedToken(0, usedToken);

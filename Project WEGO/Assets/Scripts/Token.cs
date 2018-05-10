@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿
 using UnityEngine;
 
 public class Token : MonoBehaviour
@@ -32,6 +31,7 @@ public class Token : MonoBehaviour
     bool isCurrentlySelected = false;
     bool isRegisteredToMove = false;
 
+	int playerID;
 
     public float TimeToMove = 0.3f;
 
@@ -55,8 +55,8 @@ public class Token : MonoBehaviour
 
     }
 
-    // Only called first time, sets material colors and sprite
-    public void SetUp(string type, WarManager w)
+	// Only called first time, sets material colors and sprite
+	public void SetUp(string type, WarManager w, int player)
     {
         LeftSprite.sprite = Resources.Load<Sprite>(type + "_L");
         RightSprite.sprite = Resources.Load<Sprite>(type + "_R");
@@ -65,6 +65,8 @@ public class Token : MonoBehaviour
         warManager = w;
 
         unitStats = UnitStatsTemplate.GetStatsForUnit(type);
+
+		playerID = player;
     }
 
     // Activate the colliders when hex is selected
@@ -120,14 +122,14 @@ public class Token : MonoBehaviour
                 warManager.UnregisterTokenToMove(this);
 
             NextHexGO = h;
-            SetTarget(NextHexGO.LeaderLocation);
+            SetTarget(NextHexGO.LeaderLocations[playerID]);
             warManager.RegisterTokenToMove(this);
             isRegisteredToMove = true;
             return;
         }
 
         // If the token can reserve a spot on the new hex
-        if (h.AnyVacancies() == true)
+		if (h.AnyVacancies(playerID) == true)
         {
             // If token already registered elsewhere, be sure to decrement 
             // reservations on previously assigned NextHexGO
@@ -135,16 +137,16 @@ public class Token : MonoBehaviour
             {
                 warManager.UnregisterTokenToMove(this);
 
-                NextHexGO.DecrementReservation(nextLocationOnHex);
+				NextHexGO.DecrementReservation(nextLocationOnHex, playerID);
             }
 
             // Set next hexGO
             NextHexGO = h;
 
             // Unreserve current spot
-            CurrentHexGO.DecrementReservation(currentLocationOnHex);
+			CurrentHexGO.DecrementReservation(currentLocationOnHex,playerID);
 
-            SetTarget(NextHexGO.GetNextAvailableTokenLocation());
+			SetTarget(NextHexGO.GetNextAvailableTokenLocation(playerID));
             SetNextLocationOnHex(targetTransform);
             warManager.RegisterTokenToMove(this);
             isRegisteredToMove = true;
@@ -211,7 +213,7 @@ public class Token : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, targetTransform.rotation,(StartingDistance-currentDistance)/StartingDistance);
 
         // Return true if both angle and rotation are close enough to target
-        if (Vector3.Distance(transform.position, targetTransform.position) < .01f && Quaternion.Angle(transform.rotation, targetTransform.rotation) < 0.5f)
+        if (Vector3.Distance(transform.position, targetTransform.position) < .0001f && Quaternion.Angle(transform.rotation, targetTransform.rotation) < 0.5f)
         {
             // Reset "flags" and current/Next hexGO
             StartingDistance = -1;
@@ -227,11 +229,11 @@ public class Token : MonoBehaviour
         else
             return false;
     }
-
+    
     public virtual void RefactorTarget()
     {
-        NextHexGO.DecrementReservation(nextLocationOnHex);
-        SetTarget(NextHexGO.GetNextAvailableTokenLocation());
+        NextHexGO.DecrementReservation(nextLocationOnHex,playerID);
+        SetTarget(NextHexGO.GetNextAvailableTokenLocation(playerID));
         SetNextLocationOnHex(targetTransform);
     }
 
@@ -307,5 +309,10 @@ public class Token : MonoBehaviour
     {
         return unitStats.AttackRange;
     }
+
+    public string GetUnitType()
+	{
+		return unitStats.Type;
+	}
 
 }
