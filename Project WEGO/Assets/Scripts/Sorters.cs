@@ -8,15 +8,15 @@
 // Sort by ranged field in a Goodness object
 public class SortRangedGoodness : IComparer
 {
-
+	public int PlayerID { get; set; }
     public int Compare(object x, object y)
 	{
-		Goodness a = (Goodness)x;
-        Goodness b = (Goodness)y;
+		HexComponent a = (HexComponent)x;
+		HexComponent b = (HexComponent)y;
 
-        if (a.Ranged < b.Ranged)
+		if (a.HexGoodness[PlayerID].Ranged < b.HexGoodness[PlayerID].Ranged)
             return 1;
-        if (a.Ranged > b.Ranged)
+		if (a.HexGoodness[PlayerID].Ranged > b.HexGoodness[PlayerID].Ranged)
             return -1;
 
         return 0;
@@ -28,15 +28,15 @@ public class SortRangedGoodness : IComparer
 // Sort by Melee field in a Goodness object
 public class SortMeleeGoodness : IComparer
 {
-
+	public int PlayerID { get; set; }
     public int Compare(object x, object y)
     {
-        Goodness a = (Goodness)x;
-        Goodness b = (Goodness)y;
+		HexComponent a = (HexComponent)x;
+		HexComponent b = (HexComponent)y;
 
-		if (a.Melee < b.Melee)
+		if (a.HexGoodness[PlayerID].Melee < b.HexGoodness[PlayerID].Melee)
             return 1;
-		if (a.Melee > b.Melee)
+		if (a.HexGoodness[PlayerID].Melee > b.HexGoodness[PlayerID].Melee)
             return -1;
 
         return 0;
@@ -48,15 +48,15 @@ public class SortMeleeGoodness : IComparer
 // Sort by ranged field in a Goodness object
 public class SortCavalryGoodness : IComparer
 {
-
+	public int PlayerID { get; set; }
     public int Compare(object x, object y)
     {
-        Goodness a = (Goodness)x;
-        Goodness b = (Goodness)y;
+		HexComponent a = (HexComponent)x;
+		HexComponent b = (HexComponent)y;
 
-		if (a.Cavalry < b.Cavalry)
+		if (a.HexGoodness[PlayerID].Cavalry < b.HexGoodness[PlayerID].Cavalry)
             return 1;
-		if (a.Cavalry > b.Cavalry)
+		if (a.HexGoodness[PlayerID].Cavalry > b.HexGoodness[PlayerID].Cavalry)
             return -1;
 
         return 0;

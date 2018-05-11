@@ -125,6 +125,9 @@ public class HexMap : MonoBehaviour {
         AddTopography(7,7);
         UpdateVisuals();
 		FilterStartingHexes();
+
+		// Evaluate base "goodness" of hexes
+		EvaluateHexGoodness();
     }
 
     // Test function to add features to the map
@@ -349,10 +352,170 @@ public class HexMap : MonoBehaviour {
 			toRemove.Clear();
 		}
 
+        
+
+	}
+
+	float AdjacentColumnScale = 3;
+    
+	void EvaluateHexGoodness()
+	{
+		HexComponent tempHex;
+		Goodness tempGoodness;
+		Dictionary<int, Goodness> ColumnGoodness = new Dictionary<int, Goodness>();
+		for (int i = 0; i < MapTileWidth; i++)
+		{
+			ColumnGoodness.Add(i, GetColumnGoodness(i));
+		}
+
+
+		foreach (var item in HexToGameObject.Values)
+		{
+
+			tempHex = item.GetComponent<HexComponent>();
+            
+			tempGoodness = GoodnessFromHexType(tempHex.GetHexType());
+			tempGoodness = Goodness.AddGoodness(tempGoodness, GoodnessFromNeighbors(tempHex));
+			int baseQ = tempHex.GetHex().Q;
+			if (baseQ == 0)
+				tempGoodness = Goodness.AddGoodness(tempGoodness, GoodnessFromColumn(ColumnGoodness[0],ColumnGoodness[1].DivideBy(AdjacentColumnScale)));
+			else if (baseQ == MapTileWidth-1)
+				tempGoodness = Goodness.AddGoodness(tempGoodness, GoodnessFromColumn(ColumnGoodness[MapTileWidth-1], ColumnGoodness[MapTileWidth-2].DivideBy(AdjacentColumnScale)));
+			else
+				tempGoodness = Goodness.AddGoodness(tempGoodness, GoodnessFromColumn(ColumnGoodness[baseQ], ColumnGoodness[baseQ-1].DivideBy(AdjacentColumnScale),ColumnGoodness[baseQ + 1].DivideBy(AdjacentColumnScale)));
+
+
+			if (tempGoodness == null)
+				Debug.Log("WTF!!!!!!!");
+			tempHex.SetBaseGoodness(tempGoodness);
+		}
+
 
 
 	}
 
+	// Give each type of unit preferecnces on hex terrain
+    Goodness GoodnessFromHexType(string s)
+    {
+        switch (s)
+        {
+            case "FlatForest":
+                //return 0.4f;
+                return new Goodness(
+                    0.4f,     // Ranged
+                    0.4f,     // Melee
+                    0.4f);    // Cavalry
+
+            case "Hill":
+                //return 0.3f;
+                return new Goodness(
+                    0.4f,     // Ranged
+                    0.3f,     // Melee
+                    0.3f);    // Cavalry
+
+            case "HillForest":
+                //return 0.5f;
+                return new Goodness(
+                    0.5f,     // Ranged
+                    0.4f,     // Melee
+                    0.4f);    // Cavalry
+
+            case "Wetland":
+                //return -0.5f;
+                return new Goodness(
+                    -1,     // Ranged
+                    -1,     // Melee
+                    -1);    // Cavalry
+
+            case "Pond":
+                //return -2f;
+                return new Goodness(
+                    -2,     // Ranged
+                    -2,     // Melee
+                    -2);    // Cavalry
+
+            case "Boulder":
+                //return -2f;
+                return new Goodness(
+                    -2,     // Ranged
+                    -2,     // Melee
+                    -2);    // Cavalry
+
+
+            default:
+                return null;
+        }
+
+    }
+
+    // Give each type of unit preference on neighbor terrain types in front of it
+    Goodness GoodnessFromNeighbors(HexComponent h)
+    {
+        Goodness g = new Goodness(0, 0, 0);
+        Hex neighbor = null;
+        
+
+        // For player 0, that means directions 5,0,1
+    
+        for (int i = 0; i < 6; i++)
+        {
+            neighbor = GetHexNeighbor(h.GetHex(), i);
+
+            if (neighbor == null)
+            {
+                g.AddToAll(-.1f);
+                continue;
+            }
+
+            // Evaluate neighbor goodness
+            Goodness ng = GoodnessFromHexType(neighbor.GetHexType());
+
+
+            if (ng != null)
+            {
+                // Scale down
+                ng.DivideBy(3f);
+
+                // Add to current goodness
+                g = Goodness.AddGoodness(g, ng);
+            }
+        }
+ 
+        return g;
+    }
+
+	float ColumnGoodnessScale = 5;
+
+	Goodness GetColumnGoodness(int c)
+	{
+		Goodness g = new Goodness(0, 0, 0);
+		Hex hex;
+		for (int i = -c / 2; i <  MapTileHeight - c/2 - c % 2; i++)
+		{
+
+			hex = GetHexAt(c, i);
+			if (hex == null)
+			{
+				Debug.Log(string.Format("No hex at ({0},{1}). Time to fix this code.", c, i));
+				continue;
+			}
+
+			g = Goodness.AddGoodness(g, GoodnessFromHexType(hex.GetHexType()));
+		}
+
+		// Scale down g
+		g.DivideBy(ColumnGoodnessScale);
+
+		return g;
+	}
+    
+	Goodness GoodnessFromColumn(Goodness g1, Goodness g2, Goodness g3 = null)
+	{
+		Goodness goodness = Goodness.AddGoodness(g1, g2, g3);
+
+		return goodness;
+	}
+       
     public float GetMapWidth()
     {
         return MapActualWidth;

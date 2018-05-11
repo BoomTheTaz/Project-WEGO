@@ -17,31 +17,36 @@ public class Goodness
 	}
 
     // Method to add one Goodness to another
-	public static Goodness AddGoodness(Goodness a, Goodness b)
+	public static Goodness AddGoodness(Goodness a, Goodness b, Goodness c = null)
 	{
 		if (a == null && b == null)
 		{
 			Debug.LogError("Trying to add to null Goodness objects. What is going on?!");
 			return null;
 		}
-
+        
 		if (b == null)
 			return a;
 		if (a == null)
 			return b;
 
-        
 
-		return new Goodness(a.Ranged + b.Ranged, a.Melee + b.Melee, a.Cavalry + b.Cavalry);
+		if (c == null)
+			return new Goodness(a.Ranged + b.Ranged, a.Melee + b.Melee, a.Cavalry + b.Cavalry);
+		else
+			return new Goodness(a.Ranged + b.Ranged + c.Ranged, a.Melee + b.Melee + c.Melee, a.Cavalry + b.Cavalry + c.Cavalry);
+
 
 	}
 
 
-    public void DivideBy(float f)
+    public Goodness DivideBy(float f)
 	{
 		Ranged /= f;
 		Melee /= f;
 		Cavalry /= f;
+
+		return this;
 	}
 
 

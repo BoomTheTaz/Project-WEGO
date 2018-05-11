@@ -51,6 +51,7 @@ public class HexComponent : MonoBehaviour
     List<HexComponent>[] ValidMoveHexes = new List<HexComponent>[maxRange];
     List<HexComponent>[] ValidAttackHexes = new List<HexComponent>[maxRange];
 
+	public Goodness[] HexGoodness { get; private set; }
 
     enum States { Moving, Attacking, Defending };
 
@@ -62,11 +63,15 @@ public class HexComponent : MonoBehaviour
         SpotAvailable[1] = new bool[] { true, true, true, true, true, true };
 		TokenLocations[0] = TokenLocations0;
         TokenLocations[1] = TokenLocations1;
+		HexGoodness = new Goodness[2];
+		HexGoodness[0] = new Goodness(0, 0, 0);
+        HexGoodness[1] = new Goodness(0, 0, 0);
 	}
 
 	private void Start()
 	{
-		
+		HexGoodness = new Goodness[2];
+
         
 
         for (int i = 0; i < maxRange; i++)
@@ -735,4 +740,25 @@ public class HexComponent : MonoBehaviour
 		return hex.Q / 2f + hex.R;
 	}
 
+    public void AddGoodness(Goodness g, int player)
+	{
+		HexGoodness[player] = Goodness.AddGoodness(HexGoodness[player], g);
+
+	}
+
+    public void AddGoodnessForUnit(int type, float amount, int player)
+	{
+
+		HexGoodness[player].AddTo(type, amount);
+        
+	}
+
+	public void SetBaseGoodness(Goodness g)
+	{
+		if (HexGoodness[1] == null)
+			Debug.Log("WTF");
+		HexGoodness[0] = Goodness.AddGoodness(HexGoodness[0], g);
+		HexGoodness[1] = Goodness.AddGoodness(HexGoodness[1], g);
+
+	}
 }
