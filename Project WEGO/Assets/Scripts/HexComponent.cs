@@ -70,9 +70,7 @@ public class HexComponent : MonoBehaviour
 
 	private void Start()
 	{
-		HexGoodness = new Goodness[2];
-
-        
+       
 
         for (int i = 0; i < maxRange; i++)
         {
@@ -165,7 +163,7 @@ public class HexComponent : MonoBehaviour
         OutlineWhite();
         hexMap.SetCurrentHexGO(this);
         currentState = hexMap.CurrentState;
-
+		Debug.Log(HexGoodness[0].Ranged);
         MaxAttack = 0;
         MaxMovement = 0;
 

@@ -40,14 +40,17 @@ public class WarManager : MonoBehaviour
 
     string[] ArmyUnits1 = {
 		"Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee",
+		"Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee",
+		"Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry",
+		"Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry",
 		"Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged",
-		"Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry"
+		"Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged"
 	};
 
     string[] ArmyUnits2 = {
 		"Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee",
-		"Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged",
-		"Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry"
+		"Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry",
+		"Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged"
 	};
 
 

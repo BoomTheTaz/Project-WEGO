@@ -6,8 +6,8 @@ public class HexMap : MonoBehaviour {
 
 
     public GameObject HexPrefab;
-    public static int MapTileWidth = 11;
-    public static int MapTileHeight = 15;
+    public static int MapTileWidth = 9;
+    public static int MapTileHeight = 13;
 
     float xPos;
     float zPos;
@@ -44,9 +44,7 @@ public class HexMap : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        MapTileWidth = 11;
-        MapTileHeight = 15;
-
+      
 		ValidStartingHexes[0] = new List<HexComponent>();
 		ValidStartingHexes[1] = new List<HexComponent>();
 
@@ -117,12 +115,13 @@ public class HexMap : MonoBehaviour {
                 if (MapActualWidth <= 0 && column == MapTileWidth - 1)
                     MapActualWidth = HexGO.transform.position.x;
             }
-
+            
             // Obtain Height of map on last row
             if (MapActualHeight <= 0 && row == MapTileHeight - 1)
                 MapActualHeight = HexGO.transform.position.z;
         }
-        AddTopography(7,7);
+		//AddTopography(5,5);
+		NewAddTopography(1.2f, .9f);
         UpdateVisuals();
 		FilterStartingHexes();
 
@@ -140,7 +139,28 @@ public class HexMap : MonoBehaviour {
     // - TallGrass(?)
     // - Pond
 
+    void NewAddTopography(float eScale, float wScale)
+	{
+		float  elevationSeedX= Random.Range(0f, 1f);
+		float elevationSeedY = Random.Range(0f, 1f);
+		float elevationScale = 2;
 
+
+		float wetSeedX = Random.Range(0f, 1f);
+		float wetSeedY = Random.Range(0f, 1f);
+		float wetScale = 4;
+
+		foreach (var h in Hexes.Values)
+		{
+			float row = h.Q / 2f + h.R;
+			if (row < 1.5f || row > MapTileHeight - 2.5f)
+				continue;
+
+			h.AddElevation(eScale * Mathf.PerlinNoise(elevationSeedX + h.Q / elevationScale, elevationSeedY + row / elevationScale));
+			h.AddMoisture(wScale * Mathf.PerlinNoise(wetSeedX + h.Q / wetScale, wetSeedY + row / wetScale));
+		}
+        
+	}
 
     /// <summary>
     /// Adds features to the map
@@ -262,7 +282,7 @@ public class HexMap : MonoBehaviour {
             }
 
             // Pond
-            else if (h.GetMoisture() > 1)
+            else if (h.GetMoisture() > .9f)
             {
                 mr.material = PondMat;
                 s = "Pond";
@@ -292,16 +312,16 @@ public class HexMap : MonoBehaviour {
 
                 }
             }
-
+            
             // Wetland
-            else if (h.GetMoisture() > 0.8)
+            else if (h.GetMoisture() > 0.7f)
             {
                 mr.material = WetlandMat;
                 s = "Wetland";
 
             }
             // Flat Forest
-            else if (h.GetMoisture() > 0.5)
+            else if (h.GetMoisture() > 0.5f)
             {
                 mr.material = ForestFlatMat;
 
@@ -353,7 +373,7 @@ public class HexMap : MonoBehaviour {
 		}
 
         
-
+        
 	}
 
 	float AdjacentColumnScale = 3;
@@ -409,14 +429,14 @@ public class HexMap : MonoBehaviour {
             case "Hill":
                 //return 0.3f;
                 return new Goodness(
-                    0.4f,     // Ranged
+                    0.5f,     // Ranged
                     0.3f,     // Melee
                     0.3f);    // Cavalry
 
             case "HillForest":
                 //return 0.5f;
                 return new Goodness(
-                    0.5f,     // Ranged
+                    0.6f,     // Ranged
                     0.4f,     // Melee
                     0.4f);    // Cavalry
 
@@ -437,9 +457,9 @@ public class HexMap : MonoBehaviour {
             case "Boulder":
                 //return -2f;
                 return new Goodness(
-                    -2,     // Ranged
-                    -2,     // Melee
-                    -2);    // Cavalry
+                    -4,     // Ranged
+                    -4,     // Melee
+                    -4);    // Cavalry
 
 
             default:
@@ -448,6 +468,7 @@ public class HexMap : MonoBehaviour {
 
     }
 
+    
     // Give each type of unit preference on neighbor terrain types in front of it
     Goodness GoodnessFromNeighbors(HexComponent h)
     {
@@ -474,7 +495,7 @@ public class HexMap : MonoBehaviour {
             if (ng != null)
             {
                 // Scale down
-                ng.DivideBy(3f);
+                ng.DivideBy(5f);
 
                 // Add to current goodness
                 g = Goodness.AddGoodness(g, ng);
@@ -484,7 +505,7 @@ public class HexMap : MonoBehaviour {
         return g;
     }
 
-	float ColumnGoodnessScale = 5;
+	float ColumnGoodnessScale = 7;
 
 	Goodness GetColumnGoodness(int c)
 	{
@@ -505,7 +526,7 @@ public class HexMap : MonoBehaviour {
 
 		// Scale down g
 		g.DivideBy(ColumnGoodnessScale);
-
+        
 		return g;
 	}
     
@@ -1085,7 +1106,6 @@ public class HexMap : MonoBehaviour {
             item.NoOutline();
         }
 
-		//ValidStartingHexes = null;
 	}
 
 	public HexComponent[] GetStartingHexes(int id)
@@ -1096,5 +1116,96 @@ public class HexMap : MonoBehaviour {
 	public HexComponent GetHexComponentFromHex(Hex h)
 	{
 		return HexToGameObject[h].GetComponent<HexComponent>();
+	}
+
+	float RangedBehindBias = 0.1f;
+	float MeleeBesideBias = 0.1f;
+
+    // Used to push ranged behind melee units
+	public void ImproveGoodness(HexComponent hex, int player)
+	{
+		// Half benefit for same hex
+		hex.AddGoodnessForUnit((int)UnitTypes.Ranged, RangedBehindBias/2, player);
+        
+        for (int i = 2; i < 5; i++)
+		{
+			int c = (i + player * 3) % 6;
+
+			Hex neighbor = GetHexNeighbor(hex.GetHex(), c);
+
+			if (neighbor == null)
+				continue;
+            
+			if (i == 3 )
+				HexToGameObject[neighbor].GetComponent<HexComponent>().AddGoodnessForUnit((int)UnitTypes.Ranged, RangedBehindBias, player);
+
+			else
+			{
+				HexToGameObject[neighbor].GetComponent<HexComponent>().AddGoodnessForUnit((int)UnitTypes.Ranged, RangedBehindBias, player);
+				HexToGameObject[neighbor].GetComponent<HexComponent>().AddGoodnessForUnit((int)UnitTypes.Melee, MeleeBesideBias/2, player);
+				HexToGameObject[neighbor].GetComponent<HexComponent>().AddGoodnessForUnit((int)UnitTypes.Cavalry, MeleeBesideBias/2, player);
+                
+                if (i == 2)
+				{
+					neighbor = GetHexNeighbor(neighbor, c - 1);
+				}
+
+                if ( i == 4)
+				{
+					neighbor = GetHexNeighbor(neighbor, c + 1);
+				}
+
+				if (neighbor == null) 
+					continue;
+
+				HexToGameObject[neighbor].GetComponent<HexComponent>().AddGoodnessForUnit((int)UnitTypes.Melee, MeleeBesideBias, player);
+				HexToGameObject[neighbor].GetComponent<HexComponent>().AddGoodnessForUnit((int)UnitTypes.Cavalry, MeleeBesideBias, player);
+
+
+			}
+
+		}      
+
+	}
+
+	public void UnimproveGoodness(HexComponent hex, int player)
+    {
+        // Half benefit for same hex
+        hex.AddGoodnessForUnit((int)UnitTypes.Ranged, -RangedBehindBias / 2, player);
+
+        for (int i = 2; i < 5; i++)
+        {
+            int c = (i + player * 3) % 6;
+
+            Hex neighbor = GetHexNeighbor(hex.GetHex(), c);
+
+            if (neighbor == null)
+                continue;
+
+            if (i == 3)
+                HexToGameObject[neighbor].GetComponent<HexComponent>().AddGoodnessForUnit((int)UnitTypes.Ranged, -RangedBehindBias, player);
+
+            else
+            {
+                HexToGameObject[neighbor].GetComponent<HexComponent>().AddGoodnessForUnit((int)UnitTypes.Ranged, -RangedBehindBias, player);
+                HexToGameObject[neighbor].GetComponent<HexComponent>().AddGoodnessForUnit((int)UnitTypes.Melee, -MeleeBesideBias, player);
+
+            }
+
+        }
+
+    }
+
+
+    // Used to update neighboring goodness values
+	public void UpdateGoodness(HexComponent prevHex, HexComponent newHex, int player)
+	{
+		UnimproveGoodness(prevHex, player);
+		ImproveGoodness(newHex, player);
+	}
+
+    public int GetMapTileHeight()
+	{
+		return MapTileHeight;
 	}
 }

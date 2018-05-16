@@ -11,6 +11,7 @@ public class UnitStats
     public string Type { get; private set; }    // Unit type/name
     public int Health { get; private set; }     // Health value (Number of living soldiers per token?)
     public int AttackRange { get; private set; }
+	public int UnitTypeInt { get; private set; }
 
     public UnitStats(float atk, float def, int move, int health, int atkRange)
     {
@@ -25,5 +26,22 @@ public class UnitStats
     public void SetUnitAs(string s)
     {
         Type = s;
+
+		switch (s)
+        {
+            case "Melee":
+				UnitTypeInt = (int)UnitTypes.Melee;
+                break;
+            case "Ranged":
+				UnitTypeInt = (int)UnitTypes.Ranged;
+                break;
+            case "Cavalry":
+				UnitTypeInt = (int)UnitTypes.Cavalry;
+                break;
+
+            default:
+				Debug.Log("Invalid Unit Type: " + s);
+                break;
+        }
     }
 }

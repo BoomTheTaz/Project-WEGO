@@ -315,4 +315,9 @@ public class Token : MonoBehaviour
 		return unitStats.Type;
 	}
 
+    public int GetUnitTypeInt()
+	{
+		return unitStats.UnitTypeInt;
+	}
+
 }

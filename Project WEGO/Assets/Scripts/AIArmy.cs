@@ -1,10 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using System;
-using System.Linq;
 
-public class AIArmy : ArmyManager {
+public enum WarPhases { Advancing, Engaging, Retreating };
+
+public class AIArmy : ArmyManager
+{
 
 	List<HexComponent> currentHexes;  // Used to store currently occupied hexes
 	HexMap hexMap;
@@ -14,17 +15,20 @@ public class AIArmy : ArmyManager {
 	SortMeleeGoodness sortMelee = new SortMeleeGoodness();
 	SortCavalryGoodness sortCavalry = new SortCavalryGoodness();
 
+	int currentPhase;
+
 	bool HumanControlled;
 
-    // Constructor
+	// Constructor
 	public AIArmy(int id, int size, WarManager w, HexMap map) : base(id, size, w)
-    {
+	{
 		currentHexes = new List<HexComponent>();
 		hexMap = map;
 
+		currentPhase = (int)WarPhases.Advancing;
 
-        // For testing purposes, allow control over first army
-        // Will be placing check before registering token actions
+		// For testing purposes, allow control over first army
+		// Will be placing check before registering token actions
 		if (playerID == 0)
 			HumanControlled = true;
 
@@ -32,6 +36,8 @@ public class AIArmy : ArmyManager {
 		sortMelee.PlayerID = playerID;
 		sortCavalry.PlayerID = playerID;
 	}
+
+	float ForwardStartScale = 0.4f;
 
 	// Called on war start to set up tokens on hexes
 	public override void SetupTokens()
@@ -41,54 +47,102 @@ public class AIArmy : ArmyManager {
 
 		ValidHexes = hexMap.GetStartingHexes(playerID);
         
-		//for (int i = 0; i < ValidHexes.Length; i++)
-		//{
-		//	goodness[i] = EvaluateStartingHex(ValidHexes[i]);
-		//}
+        // Bias starting position towards center
+		foreach (var item in ValidHexes)
+		{
+			Hex hex = item.GetHex();
+			if (hex.Q / 2f + hex.R == 0 + hexMap.GetMapTileHeight()*playerID + 1 - 2*playerID)
+			{
+				item.AddGoodnessForUnit((int)UnitTypes.Melee, ForwardStartScale, playerID);
+				item.AddGoodnessForUnit((int)UnitTypes.Cavalry, ForwardStartScale, playerID);
+			}
+		}
+
+
 
 		// Army should always start with melee
-		string currentType = "Melee";
-		Array.Sort(ValidHexes, sortMelee);
+		string currentType = Army[0].GetUnitType();
+		Resort(currentType);
 
-        
+		// Add leader to best melee hex
+        ValidHexes[0].AddToken(Leader.gameObject, playerID);
+
 		int counter = 0;
-        // Assign Tokens to best hexes
+		// Assign Tokens to best hexes
 		for (int i = 0; i < armySize; i++)
 		{
 			string type = Army[i].GetUnitType();
 			if (type != currentType)
 			{
-				if (type == "Ranged")
-					Array.Sort(ValidHexes, sortRanged);
-				else if (type == "Cavalry")
-					Array.Sort(ValidHexes, sortCavalry);
-				else
-					Debug.LogError("Unknown unit type: " + type);
+				Resort(type);
 
 				currentType = type;
 				counter = 0;
 			}
 
-            // Increment counter if cannot place token on preferred hex
-			while (ValidHexes[counter].AddToken(Army[i].gameObject,playerID) == false)
-				counter++;
+            // If failed to add token to desired hex, resort and find next best option
+			if (ValidHexes[counter].AddToken(Army[i].gameObject, playerID) == false)
+			{
+				counter = 0;
+				Resort(currentType);
+
+				// Increment counter if cannot place token on preferred hex
+                while (ValidHexes[counter].AddToken(Army[i].gameObject, playerID) == false)
+                    counter++;
+			}
+            
+            // Add to list of current hexes
 			if (currentHexes.Contains(ValidHexes[counter]) == false)
 				currentHexes.Add(ValidHexes[counter]);
+            
+			if (type != "Ranged")
+				hexMap.ImproveGoodness(ValidHexes[counter],playerID);
 		}
 
-        // Add leader to best hex
-		ValidHexes[0].AddToken(Leader.gameObject,playerID);
-  
-        // Alert WarManger that finished setting up
+
+
+		// Undo Bias starting position towards center
+        foreach (var item in ValidHexes)
+        {
+            Hex hex = item.GetHex();
+            if (hex.Q / 2f + hex.R == 0 + hexMap.GetMapTileHeight() * playerID + 1 - 2 * playerID)
+            {
+                item.AddGoodnessForUnit((int)UnitTypes.Melee, -ForwardStartScale, playerID);
+                item.AddGoodnessForUnit((int)UnitTypes.Cavalry, -ForwardStartScale, playerID);
+            }
+        }
+
+		// Alert WarManger that finished setting up
 		warManager.FinishedSettingUp();
 	}
 
 
-    void printValidHexes()
+	void printValidHexes()
 	{
 		for (int i = 0; i < ValidHexes.Length; i++)
 		{
 			Debug.Log(string.Format("Hex {0}:\tR:{1}\tM:{2}\tC:{3}", i, ValidHexes[i].HexGoodness[playerID].Ranged, ValidHexes[i].HexGoodness[playerID].Melee, ValidHexes[i].HexGoodness[playerID].Cavalry));
+		}
+	}
+
+	void Resort(string s)
+	{
+		switch (s)
+		{
+			case "Melee":
+				Array.Sort(ValidHexes, sortMelee);
+				break;
+
+			case "Ranged":
+				Array.Sort(ValidHexes, sortRanged);
+                break;
+
+			case "Cavalry":
+				Array.Sort(ValidHexes, sortCavalry);
+                break;
+
+			default:
+				break;
 		}
 	}
 
@@ -98,14 +152,24 @@ public class AIArmy : ArmyManager {
 		if (HumanControlled == false)
 		{
 
-			Debug.Log("Time to register some tokens!!!");
-			Debug.Log("Looking at " + currentHexes.Count.ToString() + " current hexes.");
+			switch (currentPhase)
+			{
+				case (int)WarPhases.Advancing:
+					Debug.Log("Time to register some tokens!!!");
+                    Debug.Log("Looking at " + currentHexes.Count.ToString() + " current hexes.");
+					break;
+
+
+				default:
+					break;
+			}
+
 		}
 	}
 
 
 
-
+	#region Old Goodness Code
 
 	//// TODO: Update this to be more complex
 	//Goodness EvaluateStartingHex(HexComponent h)
@@ -121,61 +185,61 @@ public class AIArmy : ArmyManager {
 	//	return g;
 	//}
 
- //   // Give each type of unit preferecnces on hex terrain
+	//   // Give each type of unit preferecnces on hex terrain
 	//Goodness GoodnessFromHexType(string s)
 	//{
 	//	switch (s)
 	//	{
- //           case "FlatForest":
+	//           case "FlatForest":
 	//			//return 0.4f;
 	//			return new Goodness(
- //                   0.4f,     // Ranged
+	//                   0.4f,     // Ranged
 	//				0.4f,     // Melee
 	//				0.4f);    // Cavalry
-                
- //           case "Hill":
+
+	//           case "Hill":
 	//			//return 0.3f;
 	//			return new Goodness(
- //                   0.4f,     // Ranged
- //                   0.3f,     // Melee
- //                   0.3f);    // Cavalry
-				
- //           case "HillForest":
+	//                   0.4f,     // Ranged
+	//                   0.3f,     // Melee
+	//                   0.3f);    // Cavalry
+
+	//           case "HillForest":
 	//			//return 0.5f;
 	//			return new Goodness(
- //                   0.5f,     // Ranged
- //                   0.4f,     // Melee
- //                   0.4f);    // Cavalry
-               
- //           case "Wetland":
+	//                   0.5f,     // Ranged
+	//                   0.4f,     // Melee
+	//                   0.4f);    // Cavalry
+
+	//           case "Wetland":
 	//			//return -0.5f;
 	//			return new Goodness(
- //                   -1,     // Ranged
- //                   -1,     // Melee
- //                   -1);    // Cavalry
+	//                   -1,     // Ranged
+	//                   -1,     // Melee
+	//                   -1);    // Cavalry
 
 	//		case "Pond":
- //               //return -2f;
+	//               //return -2f;
 	//			return new Goodness(
- //                   -2,     // Ranged
- //                   -2,     // Melee
- //                   -2);    // Cavalry
+	//                   -2,     // Ranged
+	//                   -2,     // Melee
+	//                   -2);    // Cavalry
 
 	//		case "Boulder":
- //               //return -2f;
+	//               //return -2f;
 	//			return new Goodness(
- //                   -2,     // Ranged
- //                   -2,     // Melee
- //                   -2);    // Cavalry
+	//                   -2,     // Ranged
+	//                   -2,     // Melee
+	//                   -2);    // Cavalry
 
-                
- //           default:
+
+	//           default:
 	//			return null;
- //       }
-        
+	//       }
+
 	//}
 
- //   // Bias selection towards center of battlefield
+	//   // Bias selection towards center of battlefield
 	//Goodness GoodnessFromDistanceToCenter(float i)
 	//{
 
@@ -183,25 +247,25 @@ public class AIArmy : ArmyManager {
 	//	if (Mathf.Abs(i - BaseRow) >= 1)
 	//	{
 	//		return new Goodness(
- //                   0.2f,     // Ranged
- //                   0.4f,     // Melee
- //                   0.4f);    // Cavalry
+	//                   0.2f,     // Ranged
+	//                   0.4f,     // Melee
+	//                   0.4f);    // Cavalry
 	//	}
 
 	//	// 1 "row" away
 	//	else if (Mathf.Abs(i - BaseRow) >= 0.5f)
 	//	{
 	//		return new Goodness(
- //                   0.4f,     // Ranged
- //                   0.2f,     // Melee
- //                   0.2f);    // Cavalry
+	//                   0.4f,     // Ranged
+	//                   0.2f,     // Melee
+	//                   0.2f);    // Cavalry
 	//	}
 
 	//	return null;
 
 	//}
 
- //   // Give each type of unit preference on neighbor terrain types in front of it
+	//   // Give each type of unit preference on neighbor terrain types in front of it
 	//Goodness GoodnessFromNeighbors(HexComponent h)
 	//{
 	//	Goodness g = new Goodness(0,0,0);
@@ -209,23 +273,23 @@ public class AIArmy : ArmyManager {
 
 	//	// Check neighbors in front of spaces
 
- //       // For player 0, that means directions 5,0,1
+	//       // For player 0, that means directions 5,0,1
 	//	if (playerID == 0)
 	//	{
 	//		int[] dir = { 5, 0, 1 };
 
- //           for (int i = 0; i < 3; i++)
+	//           for (int i = 0; i < 3; i++)
 	//		{
 	//			neighbor = hexMap.GetHexNeighbor(h.GetHex(), dir[i]);
 
 	//			if (neighbor == null)
- //               {
+	//               {
 	//				g.AddToAll(-.1f);
- //                   continue;
- //               }
+	//                   continue;
+	//               }
 
 	//			// Evaluate neighbor goodness
- //               Goodness ng = GoodnessFromHexType(neighbor.GetHexType());
+	//               Goodness ng = GoodnessFromHexType(neighbor.GetHexType());
 
 
 	//			if (ng != null)
@@ -243,20 +307,20 @@ public class AIArmy : ArmyManager {
 
 	//	// For player 1, that means directions 2,3,4
 	//	if (playerID == 1)
- //       {
-            
+	//       {
+
 	//		for (int i = 2; i < 5; i++)
- //           {
- //               neighbor = hexMap.GetHexNeighbor(h.GetHex(), i);
+	//           {
+	//               neighbor = hexMap.GetHexNeighbor(h.GetHex(), i);
 
 	//			if (neighbor == null)
- //               {
- //                   g.AddToAll(-.1f);
- //                   continue;
- //               }
+	//               {
+	//                   g.AddToAll(-.1f);
+	//                   continue;
+	//               }
 
- //               // Evaluate neighbor goodness
- //               Goodness ng = GoodnessFromHexType(neighbor.GetHexType());
+	//               // Evaluate neighbor goodness
+	//               Goodness ng = GoodnessFromHexType(neighbor.GetHexType());
 
 	//			if (ng != null)
 	//			{
@@ -267,10 +331,10 @@ public class AIArmy : ArmyManager {
 	//				// Add to current goodness
 	//				g = Goodness.AddGoodness(g, ng);
 	//			}
- //           }
+	//           }
 
- //       }
-            
+	//       }
+
 
 	//	return g;
 	//}
@@ -288,7 +352,7 @@ public class AIArmy : ArmyManager {
 	//		next = hexMap.GetHexAt(column, next.R + dir);
 	//		if (next == null)
 	//			break;
-			
+
 	//		Goodness ng = GoodnessFromHexType(next.GetHexType());
 
 	//		if (ng != null)
@@ -299,7 +363,9 @@ public class AIArmy : ArmyManager {
 	//	}
 
 
-        
+
 	//	return g;
 	//}
+
+#endregion
 }
