@@ -6,7 +6,7 @@ public class HexMap : MonoBehaviour {
 
 
     public GameObject HexPrefab;
-    public static int MapTileWidth = 9;
+    public static int MapTileWidth = 11;
     public static int MapTileHeight = 13;
 
     float xPos;
@@ -635,13 +635,22 @@ public class HexMap : MonoBehaviour {
 
     // Sets Valid Attack and movement hexes within inputted HexComponent
     // TODO: Don't search for neighbors of a hex that has an enemy on it
-    public List<HexComponent>[] GetValidMoveHexes(HexComponent h)
+    public List<HexComponent>[] GetValidMoveHexes(HexComponent h, int player)
     {
         // Clear List Array
         for (int i = 0; i < MaxRange; i++)
         {
             MoveToReturn[i].Clear();
         }
+
+
+		// TODO: if enemy on current hex, can only move backwards (1space? max movement?)
+		if (h.IsEnemyOn(player) == true)
+		{
+
+
+
+		}
 
         // Get Center Hex
         Hex center = h.GetHex();
@@ -650,7 +659,7 @@ public class HexMap : MonoBehaviour {
         // Get range for search, Using max and then storing in HexComponent
         int move = h.GetMaxMovement();
 
-        // loop times equals movement range
+		// loop times equals movement range
         for (int i = 0; i < move; i++)
         {
             // For first loop, just look at center hex
@@ -670,6 +679,10 @@ public class HexMap : MonoBehaviour {
             {
                 foreach (var item in MoveToReturn[i-1])
                 {
+					// If there is an enemy on, can move to, but no further
+					if (item.IsEnemyOn(player) == true)
+						continue;
+
                     for (int j = 0; j < 6; j++)
                     {
                         testHex = GetHexNeighbor(item.GetHex(), j);
@@ -694,6 +707,7 @@ public class HexMap : MonoBehaviour {
         // Add Hex to list of hexes accessed this turn to enable reset on turns end
         if (HexesThisTurn.Contains(h) == false)
             HexesThisTurn.Add(h);
+
 
         return MoveToReturn;
     }
@@ -744,8 +758,8 @@ public class HexMap : MonoBehaviour {
         }
     }
 
-    // TODO Write this code, use ring method
-    public List<HexComponent>[] GetValidAttackHexes(HexComponent h)
+
+    public List<HexComponent>[] GetValidAttackHexes(HexComponent h, int player)
     {
         // Clear List Array
         for (int i = 0; i < MaxRange; i++)
@@ -756,6 +770,7 @@ public class HexMap : MonoBehaviour {
         // Get Center Hex
         Hex center = h.GetHex();
         bool OnHill = false;
+		bool AnyValid = false;
 
         if (h.GetElevation() > 0.2)
             OnHill = true;
@@ -780,9 +795,16 @@ public class HexMap : MonoBehaviour {
                     if (test == null)
                         continue;
 
+					// If there is no enemy, ignore hex
+					if (HexToGameObject[test].GetComponent<HexComponent>().IsEnemyOn(player) == false)
+						continue;
+
                     // In first ring, just add all neighbors except boulders
                     if (HexToGameObject[test].GetComponent<HexComponent>().GetHexType() != "Boulder" )
                         AttackToReturn[i].Add(HexToGameObject[test].GetComponent<HexComponent>());
+
+					if (AnyValid == false)
+						AnyValid = true;
                 }
 
 
@@ -802,17 +824,15 @@ public class HexMap : MonoBehaviour {
                 }
             }
         }
-        int sum = 0;
 
-        foreach (var l in AttackToReturn)
-        {
-            sum += l.Count();
-        }
-
+        // If none were found to be valid, return null to signify no valid attack hexes
+		if (AnyValid == false)
+			return null;
 
         // Add Hex to list of hexes accessed this turn to enable reset on turns end
         if (HexesThisTurn.Contains(h) == false)
             HexesThisTurn.Add(h);
+
 
         List<HexComponent> toRemove = new List<HexComponent>();
 
@@ -1191,7 +1211,7 @@ public class HexMap : MonoBehaviour {
                 HexToGameObject[neighbor].GetComponent<HexComponent>().AddGoodnessForUnit((int)UnitTypes.Melee, -MeleeBesideBias, player);
 
             }
-
+            
         }
 
     }

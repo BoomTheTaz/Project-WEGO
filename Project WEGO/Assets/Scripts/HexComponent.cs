@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
+
 public class HexComponent : MonoBehaviour
 {
 
@@ -9,7 +10,6 @@ public class HexComponent : MonoBehaviour
 	// TODO ASAP: Store old tokens somewhere.
 	//  Currently parenting tokens immediately causes them to be registered
 	// As on a separate tile.  Clicking that new tile will move them again
-
 
 
 	bool[][] SpotAvailable = new bool[2][];
@@ -29,7 +29,7 @@ public class HexComponent : MonoBehaviour
     public Material BlueOutline;
     public Material YellowOutline;
     public Material WhiteOutline;
-
+    
     int minMovement;
     int minAttack;
     int prevMinMovement;
@@ -93,10 +93,9 @@ public class HexComponent : MonoBehaviour
     }
 
     public Hex GetHex()
-    {
-        return hex;
-    }
-
+	{
+		return hex;
+	}
 
     // Set Height of Token placement
     void SetTokenHeight(float f)
@@ -111,12 +110,19 @@ public class HexComponent : MonoBehaviour
         if (token != null)
         {
 
+			if (token.GetComponent<Token>().GetMovementSpeed() > MaxMovement)
+				MaxMovement = token.GetComponent<Token>().GetMovementSpeed();
+			if (token.GetComponent<Token>().GetAttackRange() > MaxAttack)
+				MaxAttack = token.GetComponent<Token>().GetAttackRange();
+
             // TODO Make this better
             if (token.GetComponent<LeaderToken>() != null)
             {
                 token.transform.parent = LeaderLocations[player];
                 token.GetComponent<Token>().SetCurrentHex(this);
                 
+
+
                 // Move to parent location
                 token.transform.localPosition = Vector3.zero;
                 return true;
@@ -144,7 +150,7 @@ public class HexComponent : MonoBehaviour
             }
             else
             {
-                Debug.Log(string.Format("Maximum number of tokens reached on hex at ({0},{1})", hex.Q, hex.R));
+                //Debug.Log(string.Format("Maximum number of tokens reached on hex at ({0},{1})", hex.Q, hex.R));
                 return false;
             }
 
@@ -163,8 +169,8 @@ public class HexComponent : MonoBehaviour
         OutlineWhite();
         hexMap.SetCurrentHexGO(this);
         currentState = hexMap.CurrentState;
-		Debug.Log(HexGoodness[0].Ranged);
-        MaxAttack = 0;
+
+		MaxAttack = 0;
         MaxMovement = 0;
 
         if (SelectedThisTurn == false)
@@ -205,7 +211,7 @@ public class HexComponent : MonoBehaviour
 
 
             // Get Valid Hexes for movement and Attacking
-            List<HexComponent>[] temp = hexMap.GetValidMoveHexes(this);
+            List<HexComponent>[] temp = hexMap.GetValidMoveHexes(this,0);
             for (int l = 0; l < maxRange; l++)
             {
                 foreach (var i in temp[l])
@@ -214,17 +220,19 @@ public class HexComponent : MonoBehaviour
                 }
             }
 
+			// TODO: figure out how hex components call this, maybe player object that stores id, etc.
+            temp = hexMap.GetValidAttackHexes(this,0);
 
-            temp = hexMap.GetValidAttackHexes(this);
-
-            for(int l = 0; l < maxRange; l++)
-            {
-                foreach (var i in temp[l])
-                {
-                    ValidAttackHexes[l].Add(i);
-                }
-            }
-
+			if (temp != null)
+			{
+				for (int l = 0; l < maxRange; l++)
+				{
+					foreach (var i in temp[l])
+					{
+						ValidAttackHexes[l].Add(i);
+					}
+				}
+			}
             SelectedThisTurn = true;
         }
 
@@ -242,6 +250,50 @@ public class HexComponent : MonoBehaviour
 
         return Tokens;
     }
+
+    public void AISelect(int player)
+	{
+
+		MaxAttack = 0;
+        MaxMovement = 0;
+
+		// Get Tokens on Hex
+        for (int c = 0; c < TokenLocations[player].Length; c++)
+        {
+            if (TokenLocations[player][c].childCount != 0)
+            {
+                Tokens[c] = TokenLocations[player][c].GetChild(0).gameObject.GetComponent<Token>();
+
+                // Update Max Movement as necessary
+                if (Tokens[c].GetMovementSpeed() > MaxMovement)
+                    MaxMovement = Tokens[c].GetMovementSpeed();
+
+                // Update Max Attack as necessary
+                if (Tokens[c].GetAttackRange() > MaxAttack)
+                    MaxAttack = Tokens[c].GetAttackRange();
+            }
+            else
+                Tokens[c] = null;
+
+        }
+
+        // Check for Leader token
+        if (LeaderLocations[player].childCount != 0)
+        {
+            Tokens[6] = LeaderLocations[player].GetChild(0).gameObject.GetComponent<Token>();
+            if (Tokens[6].GetMovementSpeed() > MaxMovement)
+                MaxMovement = Tokens[6].GetMovementSpeed();
+            if (Tokens[6].GetAttackRange() > MaxAttack)
+                MaxAttack = Tokens[6].GetAttackRange();
+
+        }
+        else
+            Tokens[6] = null;
+
+
+
+		UpdateMinValues(false);
+	}
 
     public void Deselected()
     {
@@ -367,8 +419,8 @@ public class HexComponent : MonoBehaviour
 
     }
 
-    // Tokens will call this when they are selected/deselected
-    public void UpdateMinValues()
+	// Tokens will call this when they are selected/deselected
+	public void UpdateMinValues(bool shouldOutline = true)
     {
         
         if (allowTokensToUpdateValidHexes == false)
@@ -405,6 +457,9 @@ public class HexComponent : MonoBehaviour
 
             }
         }
+
+		if (shouldOutline == false)
+			return;
 
         // None Selected, Unoutline everything
         if (minMovement == -1)
@@ -735,7 +790,7 @@ public class HexComponent : MonoBehaviour
 
     public float GetEffectiveRow()
 	{
-		return hex.Q / 2f + hex.R;
+		return hex.EffectiveRow;
 	}
 
     public void AddGoodness(Goodness g, int player)
@@ -759,4 +814,40 @@ public class HexComponent : MonoBehaviour
 		HexGoodness[1] = Goodness.AddGoodness(HexGoodness[1], g);
 
 	}
+    
+    public bool IsEnemyOn(int player)
+	{
+		int enemy = (player + 1) % 2;
+        
+		for (int i = 0; i < SpotAvailable[enemy].Length; i++)
+		{
+			if (SpotAvailable[enemy][i] == false)
+				return true;
+		}
+
+		return false;
+
+	}
+
+	public bool IsPlayerOn(int player)
+	{
+		return IsEnemyOn((player + 1) % 2);
+	}
+
+	public Token[] GetTokens(int player)
+	{
+		Token[] result = new Token[6];
+
+        for (int i = 0; i < 6; i++)
+		{
+			if (TokenLocations[player][i].childCount ==  0)
+				continue;
+
+			result[i] = TokenLocations[player][i].GetChild(0).GetComponent<Token>();
+		}
+         
+		return result;
+	}
+
+
 }

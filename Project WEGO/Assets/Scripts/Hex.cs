@@ -8,11 +8,13 @@ public class Hex {
         R = r;
         Q = q;
         S = -(Q + R);
+		EffectiveRow = R + Q / 2f;
     }
 
     public readonly int R;
     public readonly int Q;
     public readonly int S;
+	public readonly float EffectiveRow;
 
     //int HexRadius = 1;
     int HexWidth = 2;

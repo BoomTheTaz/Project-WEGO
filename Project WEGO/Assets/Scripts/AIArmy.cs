@@ -14,6 +14,8 @@ public class AIArmy : ArmyManager
 	SortRangedGoodness sortRanged = new SortRangedGoodness();
 	SortMeleeGoodness sortMelee = new SortMeleeGoodness();
 	SortCavalryGoodness sortCavalry = new SortCavalryGoodness();
+	SortEffectiveRow sortEffectiveRow = new SortEffectiveRow();
+
 
 	int currentPhase;
 
@@ -35,6 +37,7 @@ public class AIArmy : ArmyManager
 		sortRanged.PlayerID = playerID;
 		sortMelee.PlayerID = playerID;
 		sortCavalry.PlayerID = playerID;
+		sortEffectiveRow.PlayerID = playerID;
 	}
 
 	float ForwardStartScale = 0.4f;
@@ -62,7 +65,7 @@ public class AIArmy : ArmyManager
 
 		// Army should always start with melee
 		string currentType = Army[0].GetUnitType();
-		Resort(currentType);
+		Resort(ValidHexes, currentType);
 
 		// Add leader to best melee hex
         ValidHexes[0].AddToken(Leader.gameObject, playerID);
@@ -74,7 +77,7 @@ public class AIArmy : ArmyManager
 			string type = Army[i].GetUnitType();
 			if (type != currentType)
 			{
-				Resort(type);
+				Resort(ValidHexes, type);
 
 				currentType = type;
 				counter = 0;
@@ -84,7 +87,7 @@ public class AIArmy : ArmyManager
 			if (ValidHexes[counter].AddToken(Army[i].gameObject, playerID) == false)
 			{
 				counter = 0;
-				Resort(currentType);
+				Resort(ValidHexes, currentType);
 
 				// Increment counter if cannot place token on preferred hex
                 while (ValidHexes[counter].AddToken(Army[i].gameObject, playerID) == false)
@@ -125,20 +128,20 @@ public class AIArmy : ArmyManager
 		}
 	}
 
-	void Resort(string s)
+	void Resort(HexComponent[] h, string s)
 	{
 		switch (s)
 		{
 			case "Melee":
-				Array.Sort(ValidHexes, sortMelee);
+				Array.Sort(h, sortMelee);
 				break;
-
+                
 			case "Ranged":
-				Array.Sort(ValidHexes, sortRanged);
+				Array.Sort(h, sortRanged);
                 break;
-
+                
 			case "Cavalry":
-				Array.Sort(ValidHexes, sortCavalry);
+				Array.Sort(h, sortCavalry);
                 break;
 
 			default:
@@ -146,17 +149,131 @@ public class AIArmy : ArmyManager
 		}
 	}
 
+    // Store Dictionaries of valid hexes from each of the current hexes
+	Dictionary<HexComponent, List<HexComponent>[]> ValidMoveHexes = new Dictionary<HexComponent, List<HexComponent>[]>();
+	Dictionary<HexComponent, List<HexComponent>[]> ValidAttackHexes = new Dictionary<HexComponent, List<HexComponent>[]>();
+
+    void SetupValidHexes()
+	{
+		// Clear valid Hexes
+        // TODO: optimize (?)
+        ValidMoveHexes.Clear();
+        ValidAttackHexes.Clear();
+		HexComponent first = null;
+
+		foreach (var item in currentHexes)
+		{
+
+			if (first == null)
+				first = item;
+			
+			// Get Valid hexes
+			List<HexComponent>[] tempMove = hexMap.GetValidMoveHexes(item, playerID);
+			List<HexComponent>[] tempAttack = hexMap.GetValidAttackHexes(item, playerID);
+
+			// Store valid hexes
+			ValidMoveHexes.Add(item, tempMove);
+
+			// null would imply no valid attack targets
+			if (tempAttack != null)
+			    ValidAttackHexes.Add(item, tempAttack);
+
+		}
+	}
+    
 	public override void RegisterTokenActions()
 	{
 
 		if (HumanControlled == false)
 		{
-
+			//SetupValidHexes();
+            
 			switch (currentPhase)
 			{
 				case (int)WarPhases.Advancing:
 					Debug.Log("Time to register some tokens!!!");
-                    Debug.Log("Looking at " + currentHexes.Count.ToString() + " current hexes.");
+                    //Debug.Log("Looking at " + currentHexes.Count.ToString() + " current hexes.");
+
+                    // Sort current hexes with front line first
+					HexComponent[] currentHexArray = currentHexes.ToArray();
+					Array.Sort(currentHexArray, sortEffectiveRow);
+
+					List<HexComponent> newCurrentHexes = new List<HexComponent>();
+                    
+                    // Cycle through hexes, move all tokens
+					// TODO: maybe move groups of tokens
+					foreach (var item in currentHexes)
+					{
+						item.AISelect(playerID);
+
+						// TODO: Check for valid Attack Hexes
+						List<HexComponent>[] tempMove = hexMap.GetValidMoveHexes(item,playerID);
+
+						Token[] tokens = item.GetTokens(playerID);
+
+						// variable to scale effective row
+						int mult = playerID * -2 + 1;
+
+						foreach (var t in tokens)
+						{
+							if (t == null)
+								continue;
+
+							List<HexComponent> tempValidMove = new List<HexComponent>();
+
+							// Add all possible move hexes
+                            for (int i = 0; i < t.GetMovementSpeed(); i++)
+                            {
+                                tempValidMove.AddRange(tempMove[i]);
+                            }
+
+							HexComponent[] thisValidMove = tempValidMove.ToArray();
+                            
+                            Resort(thisValidMove, t.GetUnitType());
+
+							int counter = 0;
+                            
+							while (counter < thisValidMove.Length)
+							{
+
+
+								// If valid move hex has vacancies and advances towards enemy,
+								// set as target and break loop
+								if (thisValidMove[counter].AnyVacancies(playerID) == true &&
+									thisValidMove[counter].GetEffectiveRow() * mult > t.GetCurrentHex().GetEffectiveRow() * mult)
+								{
+									hexMap.UpdateGoodness(t.GetCurrentHex(), thisValidMove[counter], playerID);
+									t.RegisterToMove(thisValidMove[counter]);
+
+									if (newCurrentHexes.Contains(thisValidMove[counter]) == false)
+										newCurrentHexes.Add(thisValidMove[counter]);
+
+									break;
+								}
+
+								counter++;
+							}
+
+                            //while (thisValidMove[counter].AnyVacancies(playerID) == false)
+                            //{
+                            //    counter++;
+
+                            //    if (counter >= thisValidMove.Length - 1)
+                            //        break;
+                            //}
+
+                            //hexMap.UpdateGoodness(t.GetCurrentHex(), thisValidMove[counter], playerID);
+                            //t.RegisterToMove(thisValidMove[counter]);
+						}
+
+
+
+
+					}
+
+					// Replace currentHexes with new
+					currentHexes = newCurrentHexes;
+
 					break;
 
 

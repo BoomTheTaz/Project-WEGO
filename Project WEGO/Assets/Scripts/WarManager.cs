@@ -49,7 +49,10 @@ public class WarManager : MonoBehaviour
 
     string[] ArmyUnits2 = {
 		"Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee",
+		"Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee",
 		"Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry",
+		"Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry",
+		"Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged",
 		"Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged"
 	};
 
@@ -88,14 +91,14 @@ public class WarManager : MonoBehaviour
         foreach (var a in ArmyUnits1)
         {
 			temp = Instantiate(ArmyTokenPrefab1, transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
-            temp.SetUp(a, this, 0);
+            temp.SetUp(a, this, 0, IsAI[0]);
             
             Armies[0].AddTokenToArmy(temp);
         }
 
         // Set army 1 leader token
 		temp = Instantiate(LeaderTokenPrefab1,transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
-		temp.SetUp("Leader", this, 0);
+		temp.SetUp("Leader", this, 0, IsAI[0]);
 		Armies[0].SetLeader(temp.GetComponent<LeaderToken>());
 
         
@@ -107,13 +110,13 @@ public class WarManager : MonoBehaviour
         foreach (var a in ArmyUnits2)
         {
             temp = Instantiate(ArmyTokenPrefab2, transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
-            temp.SetUp(a, this, 1);
+			temp.SetUp(a, this, 1, IsAI[1]);
 
             Armies[1].AddTokenToArmy(temp);
         }
 
 		temp = Instantiate(LeaderTokenPrefab2, transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
-        temp.SetUp("Leader", this, 1);
+		temp.SetUp("Leader", this, 1, IsAI[1]);
         Armies[1].SetLeader(temp.GetComponent<LeaderToken>());
 
 

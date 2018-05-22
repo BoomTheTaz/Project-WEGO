@@ -30,6 +30,7 @@ public class Token : MonoBehaviour
     // Flags
     bool isCurrentlySelected = false;
     bool isRegisteredToMove = false;
+	bool isAIControlled = false;
 
 	int playerID;
 
@@ -56,7 +57,7 @@ public class Token : MonoBehaviour
     }
 
 	// Only called first time, sets material colors and sprite
-	public void SetUp(string type, WarManager w, int player)
+	public void SetUp(string type, WarManager w, int player, bool isAI)
     {
         LeftSprite.sprite = Resources.Load<Sprite>(type + "_L");
         RightSprite.sprite = Resources.Load<Sprite>(type + "_R");
@@ -67,6 +68,9 @@ public class Token : MonoBehaviour
         unitStats = UnitStatsTemplate.GetStatsForUnit(type);
 
 		playerID = player;
+
+		isAIControlled = isAI;
+
     }
 
     // Activate the colliders when hex is selected
@@ -109,9 +113,10 @@ public class Token : MonoBehaviour
 
 
     public void RegisterToMove(HexComponent h)
-    {
-        // Break out immediately if not selected
-        if (isCurrentlySelected == false)
+	{
+        
+		// Break out immediately if not selected
+		if (isCurrentlySelected == false && isAIControlled == false)
             return;
 
 
@@ -318,6 +323,11 @@ public class Token : MonoBehaviour
     public int GetUnitTypeInt()
 	{
 		return unitStats.UnitTypeInt;
+	}
+
+	public HexComponent GetCurrentHex()
+	{
+		return CurrentHexGO;
 	}
 
 }
