@@ -46,7 +46,7 @@ public class AIArmy : ArmyManager
 	public override void SetupTokens()
 	{
 		// Evaluate hexes, assign values, choose tokens to place
-		Debug.Log("Setting up AI tokens.");
+		//Debug.Log("Setting up AI tokens.");
 
 		ValidHexes = hexMap.GetStartingHexes(playerID);
         
@@ -152,34 +152,6 @@ public class AIArmy : ArmyManager
     // Store Dictionaries of valid hexes from each of the current hexes
 	Dictionary<HexComponent, List<HexComponent>[]> ValidMoveHexes = new Dictionary<HexComponent, List<HexComponent>[]>();
 	Dictionary<HexComponent, List<HexComponent>[]> ValidAttackHexes = new Dictionary<HexComponent, List<HexComponent>[]>();
-
-    void SetupValidHexes()
-	{
-		// Clear valid Hexes
-        // TODO: optimize (?)
-        ValidMoveHexes.Clear();
-        ValidAttackHexes.Clear();
-		HexComponent first = null;
-
-		foreach (var item in currentHexes)
-		{
-
-			if (first == null)
-				first = item;
-			
-			// Get Valid hexes
-			List<HexComponent>[] tempMove = hexMap.GetValidMoveHexes(item, playerID);
-			List<HexComponent>[] tempAttack = hexMap.GetValidAttackHexes(item, playerID);
-
-			// Store valid hexes
-			ValidMoveHexes.Add(item, tempMove);
-
-			// null would imply no valid attack targets
-			if (tempAttack != null)
-			    ValidAttackHexes.Add(item, tempAttack);
-
-		}
-	}
     
 	public override void RegisterTokenActions()
 	{
@@ -191,7 +163,7 @@ public class AIArmy : ArmyManager
 			switch (currentPhase)
 			{
 				case (int)WarPhases.Advancing:
-					Debug.Log("Time to register some tokens!!!");
+					//Debug.Log("Time to register some tokens!!!");
                     //Debug.Log("Looking at " + currentHexes.Count.ToString() + " current hexes.");
 
                     // Sort current hexes with front line first
@@ -207,6 +179,7 @@ public class AIArmy : ArmyManager
 						item.AISelect(playerID);
 
 						// TODO: Check for valid Attack Hexes
+						List<HexComponent>[] tempAttack = hexMap.GetValidAttackHexes(item, playerID);
 						List<HexComponent>[] tempMove = hexMap.GetValidMoveHexes(item,playerID);
 
 						Token[] tokens = item.GetTokens(playerID);
@@ -218,6 +191,28 @@ public class AIArmy : ArmyManager
 						{
 							if (t == null)
 								continue;
+
+							if ( tempAttack != null )
+							{
+								List<HexComponent> attackableHexes = new List<HexComponent>();
+                                // Get all attackable hexes
+								for (int i = 0; i < t.GetAttackRange(); i++)
+								{
+									if (tempAttack[i].Count > 0)
+										attackableHexes.AddRange(tempAttack[i]);
+								}
+
+                                // If we found any, attack one
+								// TODO: don't just attack first one
+								if ( attackableHexes.Count > 0)
+								{
+									t.RegisterToAttack(attackableHexes[0]);
+									continue;
+
+								}
+							}
+
+
 
 							List<HexComponent> tempValidMove = new List<HexComponent>();
 
@@ -253,22 +248,7 @@ public class AIArmy : ArmyManager
 
 								counter++;
 							}
-
-                            //while (thisValidMove[counter].AnyVacancies(playerID) == false)
-                            //{
-                            //    counter++;
-
-                            //    if (counter >= thisValidMove.Length - 1)
-                            //        break;
-                            //}
-
-                            //hexMap.UpdateGoodness(t.GetCurrentHex(), thisValidMove[counter], playerID);
-                            //t.RegisterToMove(thisValidMove[counter]);
 						}
-
-
-
-
 					}
 
 					// Replace currentHexes with new

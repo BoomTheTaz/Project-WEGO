@@ -39,6 +39,10 @@ public class UnitStats
 				UnitTypeInt = (int)UnitTypes.Cavalry;
                 break;
 
+
+			case "Leader":
+				break;
+
             default:
 				Debug.Log("Invalid Unit Type: " + s);
                 break;

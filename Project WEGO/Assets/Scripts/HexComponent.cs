@@ -35,6 +35,8 @@ public class HexComponent : MonoBehaviour
     int prevMinMovement;
     int prevMinAttack;
 
+	float currentDamage;
+
     bool allowTokensToUpdateValidHexes = false;
     
     public bool IsSelected;
@@ -849,5 +851,9 @@ public class HexComponent : MonoBehaviour
 		return result;
 	}
 
+    public void TakeDamage(float f)
+	{
+		currentDamage += f;
+	}
 
 }

@@ -24,6 +24,7 @@ public class WarManager : MonoBehaviour
 
     List<Token> TokensToMove = new List<Token>();
     List<Token> TokensToRemove = new List<Token>();
+	List<Token> TokensToAttack = new List<Token>();
 
     // Delegate to trigger movement of tokens
     delegate void MovementUpdate();
@@ -47,13 +48,17 @@ public class WarManager : MonoBehaviour
 		"Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged"
 	};
 
-    string[] ArmyUnits2 = {
-		"Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee",
-		"Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee",
-		"Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry",
-		"Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry",
-		"Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged",
-		"Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged"
+	//   string[] ArmyUnits2 = {
+	//	"Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee",
+	//	"Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee",
+	//	"Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry",
+	//	"Cavalry","Cavalry","Cavalry","Cavalry","Cavalry","Cavalry",
+	//	"Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged",
+	//	"Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged","Ranged"
+	//};
+
+	string[] ArmyUnits2 = {
+		"Ranged", "Ranged", "Ranged", "Ranged", "Ranged", "Ranged", "Ranged", "Ranged", "Ranged", "Ranged", "Ranged", "Ranged"
 	};
 
 
@@ -136,13 +141,19 @@ public class WarManager : MonoBehaviour
         // Test key for activating token movement
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            Debug.Log("Instructing to move tokens");
+            //Debug.Log("Instructing to move tokens");
             UpdateTokenMovement += MoveTokens;
+
+			InitiateAttacks();
+
             mouse.StartingMove();
             hexMap.OnTurnEnd();
         }
 
-        // Call Token movement delegate if not null
+        
+
+
+		// Call Token movement delegate if not null
         if (UpdateTokenMovement != null)
             UpdateTokenMovement();
 
@@ -164,7 +175,7 @@ public class WarManager : MonoBehaviour
 
 		NewAITurn();
 
-        Debug.Log("Setup is complete!");
+        //Debug.Log("Setup is complete!");
     }
 
     // Add inputted token to List of TokensToMove
@@ -185,6 +196,23 @@ public class WarManager : MonoBehaviour
 
     }
 
+	// Add inputted token to List of TokensToAttack
+    public void RegisterTokenToAttack(Token token)
+    {
+		TokensToAttack.Add(token);
+    }
+
+	// Remove inputted token from List of TokensToAttack
+    public void UnregisterTokenToAttack(Token token)
+    {
+
+        // FIXME Decide if this if check is necessary
+
+		if (TokensToAttack.Contains(token))
+			TokensToAttack.Remove(token);
+
+
+    }
 
 
     // Move all registered Tokens
@@ -217,12 +245,24 @@ public class WarManager : MonoBehaviour
         // If there are no tokens left to move, unregister delegate
         if (TokensToMove.Count == 0)
         {
-            Debug.Log("All tokens done moving");
+            //Debug.Log("All tokens done moving");
             UpdateTokenMovement = null;
 
 			NewAITurn();
         }
     }
+
+	void InitiateAttacks()
+	{
+		if ( TokensToAttack.Count > 0)
+		{
+			foreach (var item in TokensToAttack)
+			{
+				item.Attack();
+			}
+		}
+		TokensToAttack.Clear();
+	}
 
 	public GameObject GetToken(int player)
 	{

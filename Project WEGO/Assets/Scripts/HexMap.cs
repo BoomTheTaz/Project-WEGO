@@ -770,7 +770,6 @@ public class HexMap : MonoBehaviour {
         // Get Center Hex
         Hex center = h.GetHex();
         bool OnHill = false;
-		bool AnyValid = false;
 
         if (h.GetElevation() > 0.2)
             OnHill = true;
@@ -781,6 +780,7 @@ public class HexMap : MonoBehaviour {
 
         // Get range for search, Using max and then storing in HexComponent
         int attack = h.GetMaxAttack();
+        
 
         // loop times equals movement range
         for (int i = 0; i < attack; i++)
@@ -794,17 +794,12 @@ public class HexMap : MonoBehaviour {
 
                     if (test == null)
                         continue;
-
-					// If there is no enemy, ignore hex
-					if (HexToGameObject[test].GetComponent<HexComponent>().IsEnemyOn(player) == false)
-						continue;
-
+                  
                     // In first ring, just add all neighbors except boulders
                     if (HexToGameObject[test].GetComponent<HexComponent>().GetHexType() != "Boulder" )
                         AttackToReturn[i].Add(HexToGameObject[test].GetComponent<HexComponent>());
 
-					if (AnyValid == false)
-						AnyValid = true;
+
                 }
 
 
@@ -822,39 +817,48 @@ public class HexMap : MonoBehaviour {
                     if (item != null)
                         AnalyzeHexToAttack(center, item, i, OnHill);
                 }
+
+
             }
         }
 
-        // If none were found to be valid, return null to signify no valid attack hexes
-		if (AnyValid == false)
-			return null;
+		List<HexComponent> toRemove = new List<HexComponent>();
+		for (int i = 0; i < attack; i++)
+		{
+			foreach (var item in AttackToReturn[i])
+			{
+				// If there is no enemy, add hex to return
+				if (item.IsEnemyOn(player) == false)
+					toRemove.Add(item);
 
-        // Add Hex to list of hexes accessed this turn to enable reset on turns end
-        if (HexesThisTurn.Contains(h) == false)
-            HexesThisTurn.Add(h);
-
-
-        List<HexComponent> toRemove = new List<HexComponent>();
-
-        // Go through and remove ponds
-        for (int i = 0; i < MaxRange; i++)
-        {
-            foreach (var item in AttackToReturn[i])
-            {
-                if (item.GetHexType() == "Pond")
-                    toRemove.Add(item);
-            }
-
-            foreach (var item in toRemove)
-            {
-                AttackToReturn[i].Remove(item);
-            }
-            toRemove.Clear();
-        }
+			}
+			foreach (var item in toRemove)
+			{
+				AttackToReturn[i].Remove(item);
+			}
+			toRemove.Clear();
+		}
 
 
+		// If none were found to be valid, return null to signify no valid attack hexes
+		for (int i = 0; i < attack; i++)
+		{
+			if (AttackToReturn[i].Count > 0)
+			{
+				break;
+			}
+			if (i == attack - 1)
+			{
+				//Debug.Log("nulling");
+				return null;
+			}
+		}
 
-        return AttackToReturn;
+		// Add Hex to list of hexes accessed this turn to enable reset on turns end
+		if (HexesThisTurn.Contains(h) == false)
+			HexesThisTurn.Add(h);
+
+		return AttackToReturn;
     }
 
     // Call this on all hexes to see if it should be added to the Attack List array
@@ -874,7 +878,7 @@ public class HexMap : MonoBehaviour {
 
             if (Hex.Distance(neighbor, c) > num)
                 continue;
-
+			// FIX ME: ASAP THIS IS STUPID
             // Only want hexes on previous, smaller ring
             if (AttackToReturn[num - 1].Contains(HexToGameObject[neighbor].GetComponent<HexComponent>()))
             {

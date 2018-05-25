@@ -24,12 +24,16 @@ public class Token : MonoBehaviour
     Transform targetTransform;
     int nextLocationOnHex;
 
+	// Hex Attacking
+	HexComponent HexToAttack;
+
     // Unit Data
     UnitStats unitStats;
 
     // Flags
     bool isCurrentlySelected = false;
     bool isRegisteredToMove = false;
+	bool isRegisteredToAttack = false;
 	bool isAIControlled = false;
 
 	int playerID;
@@ -120,6 +124,12 @@ public class Token : MonoBehaviour
             return;
 
 
+		if (isRegisteredToAttack == true)
+		{
+			warManager.UnregisterTokenToAttack(this);
+			isRegisteredToAttack = false;
+		}
+
         // Check if Leader Token
         if (GetComponent<LeaderToken>() != null)
         {
@@ -163,6 +173,37 @@ public class Token : MonoBehaviour
             return;
         }
     }
+
+	public void RegisterToAttack(HexComponent h)
+	{
+		// Break out immediately if not selected
+        if (isCurrentlySelected == false && isAIControlled == false)
+            return;
+
+		if (isRegisteredToMove == true)
+		{
+			warManager.UnregisterTokenToMove(this);
+			isRegisteredToMove = false;
+		}
+
+		if (isRegisteredToAttack == true)
+			warManager.UnregisterTokenToAttack(this);
+		
+		HexToAttack = h;
+		warManager.RegisterTokenToAttack(this);
+		isRegisteredToAttack = true;
+
+
+	}
+    
+    public void Attack()
+	{
+		// TODO: Find equation to describe damage
+		HexToAttack.TakeDamage(unitStats.Attack * unitStats.Health);
+
+
+		isRegisteredToAttack = false;
+	}
 
     public void SetTarget(Transform t)
     {
@@ -255,6 +296,11 @@ public class Token : MonoBehaviour
     public bool IsRegisteredToMove()
     {
         return isRegisteredToMove;
+    }
+
+	public bool IsRegisteredToAttack()
+    {
+		return isRegisteredToAttack;
     }
 
     public void SetCurrentLocationOnHex(Transform t)
