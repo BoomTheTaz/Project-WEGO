@@ -1,12 +1,13 @@
 ﻿<Properties StartupConfiguration="{42F83539-DD86-A017-DF70-4193BFE4CD8D}|">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/HexComponent.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/Token.cs">
     <Files>
-      <File FileName="Assets/Scripts/HexComponent.cs" Line="854" Column="36" />
+      <File FileName="Assets/Scripts/HexComponent.cs" Line="395" Column="23" />
       <File FileName="Assets/Scripts/HexMap.cs" Line="860" Column="1" />
-      <File FileName="Assets/Scripts/Token.cs" Line="202" Column="63" />
-      <File FileName="Assets/Scripts/WarManager.cs" Line="46" Column="44" />
+      <File FileName="Assets/Scripts/Token.cs" Line="394" Column="28" />
+      <File FileName="Assets/Scripts/WarManager.cs" Line="61" Column="121" />
       <File FileName="Assets/Scripts/ArmyManager.cs" Line="26" Column="3" />
-      <File FileName="Assets/Scripts/AIArmy.cs" Line="216" Column="8" />
+      <File FileName="Assets/Scripts/AIArmy.cs" Line="212" Column="19" />
+      <File FileName="Assets/Scripts/UnitStats.cs" Line="12" Column="51" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />

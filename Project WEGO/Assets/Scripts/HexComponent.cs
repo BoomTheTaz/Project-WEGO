@@ -35,7 +35,7 @@ public class HexComponent : MonoBehaviour
     int prevMinMovement;
     int prevMinAttack;
 
-	float currentDamage;
+	float[] currentDamage = new float[2];
 
     bool allowTokensToUpdateValidHexes = false;
     
@@ -850,10 +850,70 @@ public class HexComponent : MonoBehaviour
          
 		return result;
 	}
-
-    public void TakeDamage(float f)
+    
+    // Store damage to evaluate later
+    public void TakeDamage(float f, int player)
 	{
-		currentDamage += f;
+        // Storing damage in other playerID for ease in damage evaluation
+		int other = (player + 1) % 2;
+		currentDamage[other] += f;
 	}
 
+    // calculate units lost and deal damage to tokens
+    public void EvaluateDamage()
+	{
+		
+		if(currentDamage[0] > 0)
+		{
+			DamageTokens(0);
+		}
+		if (currentDamage[1] > 0)
+        {
+			DamageTokens(1);
+        }
+
+		EndAttack();
+	}
+
+	int DamageMidpoint = 25;
+
+    void DamageTokens(int player)
+	{
+		Token[] tokens = GetTokens(player);
+
+		float def = 0;
+
+        foreach (var item in tokens)
+		{
+			if (item == null)
+				continue;
+			def += item.GetDefense();
+		}
+
+        if (def == 0)
+		{
+			// Something went horribly wrong, are we getting rid of dead tokens??
+			Debug.LogError("How can there be no defense");
+			return;
+		}
+
+		int unitsLost = Mathf.RoundToInt(currentDamage[player] / def * DamageMidpoint);
+		Debug.Log("Units Lost: " + unitsLost.ToString());
+
+		foreach (var item in tokens)
+		{
+			item.TakeDamage(unitsLost);
+		}
+
+
+		// Assign Damage
+	}
+    
+	void EndAttack()
+	{
+		currentDamage[0] = 0;
+		currentDamage[1] = 0;
+
+		// TODO: Decide how to handle token death, self report, check for vacancy, ???
+	}
 }

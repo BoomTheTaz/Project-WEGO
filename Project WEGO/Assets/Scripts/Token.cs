@@ -199,10 +199,14 @@ public class Token : MonoBehaviour
     public void Attack()
 	{
 		// TODO: Find equation to describe damage
-		HexToAttack.TakeDamage(unitStats.Attack * unitStats.Health);
-
+		HexToAttack.TakeDamage(unitStats.Attack * Mathf.Sqrt(unitStats.Health),playerID);
 
 		isRegisteredToAttack = false;
+	}
+
+    public float GetDefense()
+	{
+		return unitStats.Defense * Mathf.Sqrt(unitStats.Health);
 	}
 
     public void SetTarget(Transform t)
@@ -227,6 +231,7 @@ public class Token : MonoBehaviour
 
     public bool Move()
     {
+		
         if (targetTransform == null)
         {
             Debug.Log("No Target Transform to move towards. There is probably no room on new hex. Removing from list of TokensToMove.");
@@ -266,6 +271,7 @@ public class Token : MonoBehaviour
             isRegisteredToMove = false;
             CurrentHexGO = NextHexGO;
             NextHexGO = null;
+			targetTransform = null;
             currentLocationOnHex = nextLocationOnHex;
             nextLocationOnHex = -1;
             DeactivateCollider();
@@ -376,4 +382,20 @@ public class Token : MonoBehaviour
 		return CurrentHexGO;
 	}
 
+	public HexComponent GetHexAttacking()
+	{
+		return HexToAttack;
+	}
+
+    public void TakeDamage(int dmg)
+	{
+		unitStats.Health -= dmg;
+
+		if (unitStats.Health < 0)
+		{
+			Debug.Log("Alas! I am slain.");
+			CurrentHexGO.DecrementReservation(currentLocationOnHex, playerID);
+			Destroy(gameObject);
+		}
+	}
 }

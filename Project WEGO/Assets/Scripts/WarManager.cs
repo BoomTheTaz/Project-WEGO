@@ -252,16 +252,32 @@ public class WarManager : MonoBehaviour
         }
     }
 
+	List<HexComponent> AttackedHexes = new List<HexComponent>();
 	void InitiateAttacks()
 	{
+		// skip if no tokens attacking
 		if ( TokensToAttack.Count > 0)
 		{
+			// cyce through attacking tokens, trigger attack, add attacked hex to list
 			foreach (var item in TokensToAttack)
 			{
 				item.Attack();
+
+				if (AttackedHexes.Contains(item.GetHexAttacking()) == false)
+					AttackedHexes.Add(item.GetHexAttacking());
 			}
+
+            // evaluate damage on hexes
+			foreach (var item in AttackedHexes)
+			{
+				item.EvaluateDamage();
+			}
+
+
+			TokensToAttack.Clear();
+			AttackedHexes.Clear();
 		}
-		TokensToAttack.Clear();
+
 	}
 
 	public GameObject GetToken(int player)

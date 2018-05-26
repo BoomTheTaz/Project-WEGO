@@ -164,7 +164,7 @@ public class AIArmy : ArmyManager
 			{
 				case (int)WarPhases.Advancing:
 					//Debug.Log("Time to register some tokens!!!");
-                    //Debug.Log("Looking at " + currentHexes.Count.ToString() + " current hexes.");
+					//Debug.Log("Looking at " + currentHexes.Count.ToString() + " current hexes.");
 
                     // Sort current hexes with front line first
 					HexComponent[] currentHexArray = currentHexes.ToArray();
@@ -183,15 +183,16 @@ public class AIArmy : ArmyManager
 						List<HexComponent>[] tempMove = hexMap.GetValidMoveHexes(item,playerID);
 
 						Token[] tokens = item.GetTokens(playerID);
-
+                        
 						// variable to scale effective row
 						int mult = playerID * -2 + 1;
 
 						foreach (var t in tokens)
 						{
+							
 							if (t == null)
 								continue;
-
+							
 							if ( tempAttack != null )
 							{
 								List<HexComponent> attackableHexes = new List<HexComponent>();
@@ -206,7 +207,12 @@ public class AIArmy : ArmyManager
 								// TODO: don't just attack first one
 								if ( attackableHexes.Count > 0)
 								{
+									
 									t.RegisterToAttack(attackableHexes[0]);
+									if (newCurrentHexes.Contains(t.GetCurrentHex()) == false)
+									{
+										newCurrentHexes.Add(t.GetCurrentHex());
+									}
 									continue;
 
 								}
