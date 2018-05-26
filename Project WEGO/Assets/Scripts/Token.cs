@@ -203,10 +203,20 @@ public class Token : MonoBehaviour
 
 		isRegisteredToAttack = false;
 	}
+    
 
+	float fortificationModifier = 2f;
     public float GetDefense()
 	{
-		return unitStats.Defense * Mathf.Sqrt(unitStats.Health);
+		float def = unitStats.Defense * Mathf.Sqrt(unitStats.Health);
+        
+		if(isRegisteredToMove == false && isRegisteredToAttack == false)
+		{
+			Debug.Log("FORTIFYING!!!!");
+			def *= fortificationModifier;
+		}
+
+		return def;
 	}
 
     public void SetTarget(Transform t)

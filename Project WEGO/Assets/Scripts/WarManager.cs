@@ -134,6 +134,8 @@ public class WarManager : MonoBehaviour
             Armies[1].SetupTokens();
 
     }
+
+	bool newAITurn = false;
 	
     // Update is called once per frame
 	void Update () {
@@ -147,7 +149,7 @@ public class WarManager : MonoBehaviour
 			InitiateAttacks();
 
             mouse.StartingMove();
-            hexMap.OnTurnEnd();
+			hexMap.OnTurnEnd();
         }
 
         
@@ -159,8 +161,17 @@ public class WarManager : MonoBehaviour
 
 	}
 
-    // Call after setup complete, ensures that everything knows setup is done
-    public void FinishedSettingUp()
+	private void LateUpdate()
+	{
+		if (newAITurn == true)
+		{
+			NewAITurn();
+			newAITurn = false;
+		}
+	}
+
+	// Call after setup complete, ensures that everything knows setup is done
+	public void FinishedSettingUp()
     {
 		if (OneArmyDone == false)
 		{
@@ -221,7 +232,9 @@ public class WarManager : MonoBehaviour
         // Move every token registered
         foreach (var t in TokensToMove)
         {
-            
+			if (t == null)
+				continue;
+			
             // If token.move() is true, that means close enough to target position,
             // so unregister that token
             if (t.Move() == true)
@@ -247,8 +260,7 @@ public class WarManager : MonoBehaviour
         {
             //Debug.Log("All tokens done moving");
             UpdateTokenMovement = null;
-
-			NewAITurn();
+			newAITurn = true;
         }
     }
 
@@ -294,10 +306,15 @@ public class WarManager : MonoBehaviour
 	// Call to have the AI decide on a new turn
     void NewAITurn()
 	{
+		
 		if (IsAI[0] == true)
             Armies[0].RegisterTokenActions();
         if (IsAI[1] == true)
             Armies[1].RegisterTokenActions();
 	}
 
+    public void ReevaluateAI()
+	{
+		NewAITurn();
+	}
 }

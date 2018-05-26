@@ -774,13 +774,14 @@ public class HexMap : MonoBehaviour {
         if (h.GetElevation() > 0.2)
             OnHill = true;
 
-
+        
         List<Hex> rings;
         Hex test = null;
 
         // Get range for search, Using max and then storing in HexComponent
         int attack = h.GetMaxAttack();
         
+		AttackToReturn[0].Add(HexToGameObject[center].GetComponent<HexComponent>());
 
         // loop times equals movement range
         for (int i = 0; i < attack; i++)

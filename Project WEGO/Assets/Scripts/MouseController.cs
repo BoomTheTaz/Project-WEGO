@@ -187,11 +187,20 @@ public class MouseController : MonoBehaviour {
                 {
                     if (hit.transform.gameObject.layer == LayerMask.NameToLayer("HexTile"))
                     {
-                        // If it is a new hex, Register Selected tokens to move there
-                        if (hit.transform.GetComponentInParent<HexComponent>() != currentHexGO)
-                        {
-                            currentHexGO.RegisterTokensToMove(hit.transform.GetComponentInParent<HexComponent>());
-                        }
+
+						if (CurrentState == (int)States.Moving)
+						{
+							// If it is a new hex, Register Selected tokens to move there
+							if (hit.transform.GetComponentInParent<HexComponent>() != currentHexGO)
+							{
+								currentHexGO.RegisterTokensToMove(hit.transform.GetComponentInParent<HexComponent>());
+							}
+						}
+
+						if ( CurrentState == (int)States.Attacking)
+						{
+							currentHexGO.RegisterTokensToAttack(hit.transform.GetComponentInParent<HexComponent>());
+						}
                     }
 
 

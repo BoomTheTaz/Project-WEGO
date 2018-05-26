@@ -374,6 +374,37 @@ public class HexComponent : MonoBehaviour
         return false;
     }
 
+
+	public void RegisterTokensToAttack(HexComponent hex)
+	{
+		if (IsValidAttack(hex) == true)
+		{
+			foreach (var t in Tokens)
+			{
+				if (t != null)
+				{
+
+					t.RegisterToAttack(hex);
+					allowTokensToUpdateValidHexes = false;
+					t.Deselect();
+					allowTokensToUpdateValidHexes = true;
+					UpdateMinValues();
+				}
+			}
+		}
+	}
+
+	bool IsValidAttack(HexComponent h)
+	{
+		for (int i = 0; i < minAttack; i++)
+        {
+            if (ValidAttackHexes[i].Contains(h))
+                return true;
+        }
+
+        return false;
+	}
+
     //int VacanciesFilled = 0;
     public Transform GetNextAvailableTokenLocation(int player)
     {
@@ -821,9 +852,9 @@ public class HexComponent : MonoBehaviour
 	{
 		int enemy = (player + 1) % 2;
         
-		for (int i = 0; i < SpotAvailable[enemy].Length; i++)
+		for (int i = 0; i < TokenLocations[enemy].Length; i++)
 		{
-			if (SpotAvailable[enemy][i] == false)
+			if (TokenLocations[enemy][i].childCount > 0)
 				return true;
 		}
 
@@ -893,7 +924,9 @@ public class HexComponent : MonoBehaviour
         if (def == 0)
 		{
 			// Something went horribly wrong, are we getting rid of dead tokens??
+            // Maybe we should reevaluate AI moves
 			Debug.LogError("How can there be no defense");
+            
 			return;
 		}
 
@@ -902,7 +935,8 @@ public class HexComponent : MonoBehaviour
 
 		foreach (var item in tokens)
 		{
-			item.TakeDamage(unitsLost);
+			if (item != null)
+			    item.TakeDamage(unitsLost);
 		}
 
 
