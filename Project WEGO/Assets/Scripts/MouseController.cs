@@ -1,15 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public enum States { Moving, Attacking, Defending };
 
 public class MouseController : MonoBehaviour {
 
     WarManager warManager;
+	UIManager UI;
     HexComponent currentHexGO;
     Token[] currentTokens;
-    int CurrentState;
 
     delegate void OnUpdate();
     OnUpdate onUpdate;
@@ -18,13 +19,14 @@ public class MouseController : MonoBehaviour {
 	private void Start()
 	{
         warManager = FindObjectOfType<WarManager>();
+		UI = FindObjectOfType<UIManager>();
         onUpdate = SettingUp;
-        CurrentState = (int)States.Moving;
+        //CurrentState = (int)States.Moving;
         hexMap = FindObjectOfType<HexMap>();
 
 		currentTokens = new Token[7];
 
-        hexMap.ChangeStates(CurrentState);
+        //hexMap.ChangeStates(CurrentState);
 	}
 
 	// Update is called once per frame
@@ -109,7 +111,7 @@ public class MouseController : MonoBehaviour {
     {
 
         // Left Mouse Click in gameplay should select tile/Units on tile
-        if (Input.GetMouseButtonDown(0))
+		if (Input.GetMouseButtonDown(0) && EventSystem.current.IsPointerOverGameObject() == false)
         {
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -145,7 +147,9 @@ public class MouseController : MonoBehaviour {
                         // Get HexComponent and associated Hex
                         currentHexGO = hit.transform.GetComponentInParent<HexComponent>();
 
-                        //Hex h = currentHexGO.GetHex();
+						//Hex h = currentHexGO.GetHex();
+
+						UI.SetupHexView(currentHexGO);
 
                         currentTokens = currentHexGO.Selected();
 
@@ -188,19 +192,22 @@ public class MouseController : MonoBehaviour {
                     if (hit.transform.gameObject.layer == LayerMask.NameToLayer("HexTile"))
                     {
 
-						if (CurrentState == (int)States.Moving)
-						{
-							// If it is a new hex, Register Selected tokens to move there
-							if (hit.transform.GetComponentInParent<HexComponent>() != currentHexGO)
-							{
-								currentHexGO.RegisterTokensToMove(hit.transform.GetComponentInParent<HexComponent>());
-							}
-						}
+						//if (CurrentState == (int)States.Moving)
+						//{
+						//	// If it is a new hex, Register Selected tokens to move there
+						//	if (hit.transform.GetComponentInParent<HexComponent>() != currentHexGO)
+						//	{
+						//		currentHexGO.RegisterTokensToMove(hit.transform.GetComponentInParent<HexComponent>());
+						//	}
+						//}
 
-						if ( CurrentState == (int)States.Attacking)
-						{
-							currentHexGO.RegisterTokensToAttack(hit.transform.GetComponentInParent<HexComponent>());
-						}
+						//if ( CurrentState == (int)States.Attacking)
+						//{
+						//	currentHexGO.RegisterTokensToAttack(hit.transform.GetComponentInParent<HexComponent>());
+						//}
+
+						currentHexGO.RegisterTokens(hit.transform.GetComponentInParent<HexComponent>());
+
                     }
 
 
@@ -210,25 +217,25 @@ public class MouseController : MonoBehaviour {
 
         }
 
-        // Temporary Attacking mode button
-        if (Input.GetKeyDown(KeyCode.X))
-        {
-            if(CurrentState != (int)States.Attacking)
-            {
-                CurrentState = (int)States.Attacking;
-                hexMap.ChangeStates(CurrentState);
-            }
-        }
+        //// Temporary Attacking mode button
+        //if (Input.GetKeyDown(KeyCode.X))
+        //{
+        //    if(CurrentState != (int)States.Attacking)
+        //    {
+        //        CurrentState = (int)States.Attacking;
+        //        hexMap.ChangeStates(CurrentState);
+        //    }
+        //}
 
-        // Temporary Moving mode button
-        if (Input.GetKeyDown(KeyCode.Z))
-        {
-            if (CurrentState != (int)States.Moving)
-            {
-                CurrentState = (int)States.Moving;
-                hexMap.ChangeStates(CurrentState);
-            }
-        }
+        //// Temporary Moving mode button
+        //if (Input.GetKeyDown(KeyCode.Z))
+        //{
+        //    if (CurrentState != (int)States.Moving)
+        //    {
+        //        CurrentState = (int)States.Moving;
+        //        hexMap.ChangeStates(CurrentState);
+        //    }
+        //}
     }
 
     void ClearCurrentTokens()

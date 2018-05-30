@@ -193,6 +193,8 @@ public class AIArmy : ArmyManager
 							if (t == null)
 								continue;
 							
+							t.Select();
+
 							if ( tempAttack != null )
 							{
 								List<HexComponent> attackableHexes = new List<HexComponent>();
@@ -254,6 +256,7 @@ public class AIArmy : ArmyManager
 
 								counter++;
 							}
+							t.Deselect();
 						}
 					}
 

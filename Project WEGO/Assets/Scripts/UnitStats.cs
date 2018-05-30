@@ -5,15 +5,15 @@ using UnityEngine;
 public class UnitStats
 {
 
-    public float Attack { get; private set; }   // Attack value (per "unit", i.e. health ???
-    public float Defense { get; private set; }  // Defense Rating (reduce damage or draws more damage?)
+    public int Attack { get; private set; }   // Attack value (per "unit", i.e. health ???
+	public int Defense { get; private set; }  // Defense Rating (reduce damage or draws more damage?)
     public int Movement { get; private set; }   // Can move this many hexes per turn
     public string Type { get; private set; }    // Unit type/name
     public int Health { get; set; }     // Health value (Number of living soldiers per token?)
     public int AttackRange { get; private set; }
 	public int UnitTypeInt { get; private set; }
 
-    public UnitStats(float atk, float def, int move, int health, int atkRange)
+    public UnitStats(int atk, int def, int move, int health, int atkRange)
     {
         Attack = atk;
         Defense = def;

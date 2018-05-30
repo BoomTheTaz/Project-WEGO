@@ -92,18 +92,27 @@ public class Token : MonoBehaviour
     public void Select()
     {
         isCurrentlySelected = true;
-        Outliner.gameObject.SetActive(true);
 
-        CurrentHexGO.UpdateMinValues();
+		if (isAIControlled == false)
+		{
+			Outliner.gameObject.SetActive(true);
+
+			CurrentHexGO.UpdateMinValues();
+		}
 
     }
 
     public void Deselect()
     {
         isCurrentlySelected = false;
-        Outliner.gameObject.SetActive(false);
 
-        CurrentHexGO.UpdateMinValues();
+		if (isAIControlled == false)
+		{
+			Outliner.gameObject.SetActive(false);
+
+			CurrentHexGO.UpdateMinValues();
+
+		}
 
     }
 
@@ -120,7 +129,18 @@ public class Token : MonoBehaviour
 	{
         
 		// Break out immediately if not selected
-		if (isCurrentlySelected == false && isAIControlled == false)
+		// TODO: Fix this bit, only doing so AI will set up tokens
+
+		if (isCurrentlySelected == false)
+		{
+			if (isAIControlled == true)
+			{
+			}
+
+		}
+
+
+		if (isCurrentlySelected == false )
             return;
 
 
@@ -201,9 +221,14 @@ public class Token : MonoBehaviour
 		// TODO: Find equation to describe damage
 		HexToAttack.TakeDamage(unitStats.Attack * Mathf.Sqrt(unitStats.Health),playerID);
 
+		//isRegisteredToAttack = false;
+	}
+
+	public void ResetForNextTurn()
+	{
 		isRegisteredToAttack = false;
 	}
-    
+
 
 	float fortificationModifier = 2f;
     public float GetDefense()
@@ -407,5 +432,20 @@ public class Token : MonoBehaviour
 			CurrentHexGO.DecrementReservation(currentLocationOnHex, playerID);
 			Destroy(gameObject);
 		}
+	}
+
+    public int GetBaseAttack()
+	{
+		return unitStats.Attack;
+	}
+
+    public int GetBaseDefense()
+	{
+		return unitStats.Defense;
+	}
+
+    public int GetHealth()
+	{
+		return unitStats.Health;
 	}
 }

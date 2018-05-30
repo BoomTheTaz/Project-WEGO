@@ -782,6 +782,7 @@ public class HexComponent : MonoBehaviour
         {
             ValidMoveHexes[i].Clear();
         }
+		currentState = (int)States.Moving;
     }
 
     public float GetElevation()
@@ -796,6 +797,7 @@ public class HexComponent : MonoBehaviour
 
         // Update to new current state
         currentState = i;
+		hexMap.ChangeStates(i);
 
         // Draw relevant hexes for current state
         DrawOutlines();
@@ -949,5 +951,40 @@ public class HexComponent : MonoBehaviour
 		currentDamage[1] = 0;
 
 		// TODO: Decide how to handle token death, self report, check for vacancy, ???
+	}
+
+    public bool IsLeaderOn(int player)
+	{
+		if (LeaderLocations[player].childCount == 1)
+			return true;
+		return false;
+	}
+
+	public void RegisterTokens(HexComponent targetHex)
+	{
+		switch (currentState)
+		{
+			case (int)States.Moving:
+				RegisterTokensToMove(targetHex);
+				break;
+
+
+			case (int)States.Attacking:
+				RegisterTokensToAttack(targetHex);
+				Debug.Log("Attacking");
+				break;
+            
+			case (int)States.Defending:
+
+                // ==========================
+				// TODO: fill in this code
+                // ==========================
+
+				break;
+
+			default:
+				break;
+		}
+
 	}
 }

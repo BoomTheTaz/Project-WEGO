@@ -1096,21 +1096,18 @@ public class HexMap : MonoBehaviour {
     public void OnTurnEnd()
     {
         // Reset HexComponents that were selected this turn
-
+        
         foreach (var h in HexesThisTurn)
         {
             h.ResetForNewTurn();
         }
+		HexesThisTurn.Clear();
 
     }
 
     public void ChangeStates(int i)
     {
         CurrentState = i;
-
-        // Check current hexgo
-        if (CurrentHexGO != null)
-            CurrentHexGO.UpdateCurrentState(CurrentState);
     }
 
 

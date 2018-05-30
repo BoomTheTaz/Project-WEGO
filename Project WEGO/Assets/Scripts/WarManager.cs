@@ -38,6 +38,7 @@ public class WarManager : MonoBehaviour
 	bool OneArmyDone = false;
 
 	bool[] IsAI = { true, true };
+	bool[] IsAIControlled = { false, true };
 
     string[] ArmyUnits1 = {
 		"Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee","Melee",
@@ -71,7 +72,7 @@ public class WarManager : MonoBehaviour
         UI = FindObjectOfType<UIManager>();
         hexMap = FindObjectOfType<HexMap>();
 
-        UI.InSetup();
+        //UI.InSetup();
         SetupArmies();
 	}
 
@@ -96,14 +97,14 @@ public class WarManager : MonoBehaviour
         foreach (var a in ArmyUnits1)
         {
 			temp = Instantiate(ArmyTokenPrefab1, transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
-            temp.SetUp(a, this, 0, IsAI[0]);
+            temp.SetUp(a, this, 0, IsAIControlled[0]);
             
             Armies[0].AddTokenToArmy(temp);
         }
 
         // Set army 1 leader token
 		temp = Instantiate(LeaderTokenPrefab1,transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
-		temp.SetUp("Leader", this, 0, IsAI[0]);
+		temp.SetUp("Leader", this, 0, IsAIControlled[0]);
 		Armies[0].SetLeader(temp.GetComponent<LeaderToken>());
 
         
@@ -115,13 +116,13 @@ public class WarManager : MonoBehaviour
         foreach (var a in ArmyUnits2)
         {
             temp = Instantiate(ArmyTokenPrefab2, transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
-			temp.SetUp(a, this, 1, IsAI[1]);
+			temp.SetUp(a, this, 1, IsAIControlled[1]);
 
             Armies[1].AddTokenToArmy(temp);
         }
 
 		temp = Instantiate(LeaderTokenPrefab2, transform.position + Vector3.down, Quaternion.identity, transform).GetComponent<Token>();
-		temp.SetUp("Leader", this, 1, IsAI[1]);
+		temp.SetUp("Leader", this, 1, IsAIControlled[1]);
         Armies[1].SetLeader(temp.GetComponent<LeaderToken>());
 
 
@@ -270,7 +271,7 @@ public class WarManager : MonoBehaviour
 		// skip if no tokens attacking
 		if ( TokensToAttack.Count > 0)
 		{
-			// cyce through attacking tokens, trigger attack, add attacked hex to list
+			// cycle through attacking tokens, trigger attack, add attacked hex to list
 			foreach (var item in TokensToAttack)
 			{
 				item.Attack();
@@ -279,12 +280,16 @@ public class WarManager : MonoBehaviour
 					AttackedHexes.Add(item.GetHexAttacking());
 			}
 
-            // evaluate damage on hexes
+			// evaluate damage on hexes
 			foreach (var item in AttackedHexes)
 			{
 				item.EvaluateDamage();
 			}
 
+			foreach (var item in TokensToAttack)
+            {
+                item.ResetForNextTurn();
+            }
 
 			TokensToAttack.Clear();
 			AttackedHexes.Clear();
