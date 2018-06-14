@@ -1,0 +1,2 @@
+/Users/Joe/Desktop/Github/Projects/Project-WEGO/Project WEGO/Temp/UnityVS_obj/Debug/Project WEGO.csprojResolveAssemblyReference.cache
+/Users/Joe/Desktop/Github/Projects/Project-WEGO/Project WEGO/Temp/UnityVS_obj/Debug/Project WEGO.csproj.CoreCompileInputs.cache

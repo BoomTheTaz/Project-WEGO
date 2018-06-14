@@ -19,7 +19,6 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4717518524671802}
-  - component: {fileID: 65050227505631248}
   - component: {fileID: 114032073063858028}
   m_Layer: 9
   m_Name: LeaderTokenPrefab1
@@ -247,18 +246,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1658700893196510}
   m_Mesh: {fileID: 4300000, guid: 37879210622d44f42a4be21de8c8735b, type: 3}
---- !u!65 &65050227505631248
-BoxCollider:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1350918946037878}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.30265278, y: 0.06555098, z: 0.34513724}
-  m_Center: {x: 0.001974076, y: 0.025630146, z: 0.0061914325}
 --- !u!95 &95445479989659524
 Animator:
   serializedVersion: 3

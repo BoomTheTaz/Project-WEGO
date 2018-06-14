@@ -1,16 +1,10 @@
 ﻿<Properties StartupConfiguration="{42F83539-DD86-A017-DF70-4193BFE4CD8D}|">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/TokenButton.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/PeaceScripts/PeaceUI.cs">
     <Files>
-      <File FileName="Assets/Scripts/HexComponent.cs" Line="788" Column="32" />
-      <File FileName="Assets/Scripts/HexMap.cs" Line="1104" Column="25" />
-      <File FileName="Assets/Scripts/Token.cs" Line="240" Column="4" />
-      <File FileName="Assets/Scripts/WarManager.cs" Line="161" Column="35" />
-      <File FileName="Assets/Scripts/ArmyManager.cs" Line="26" Column="3" />
-      <File FileName="Assets/Scripts/AIArmy.cs" Line="259" Column="21" />
-      <File FileName="Assets/Scripts/MouseController.cs" Line="14" Column="2" />
-      <File FileName="Assets/Scripts/UIManager.cs" Line="2" Column="34" />
-      <File FileName="Assets/Scripts/HexView.cs" Line="42" Column="3" />
-      <File FileName="Assets/Scripts/TokenButton.cs" Line="14" Column="2" />
+      <File FileName="Assets/Scripts/PeaceScripts/PlayerCity.cs" Line="8" Column="11" />
+      <File FileName="Assets/Scripts/PeaceScripts/Person.cs" Line="12" Column="3" />
+      <File FileName="Assets/Scripts/PeaceScripts/PeaceManager.cs" Line="14" Column="34" />
+      <File FileName="Assets/Scripts/PeaceScripts/PeaceUI.cs" Line="6" Column="2" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
