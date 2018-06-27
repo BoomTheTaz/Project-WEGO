@@ -131,7 +131,8 @@ public class PlayerCity  {
 		}
 
 		ProductionPerTurn[(int)Productions.Money] += TaxesPerYear;
-
+		if (UI == null)
+			Debug.Log("NO UI");
 		UI.UpdateProduction(ProductionPerTurn);
 	}
 
